@@ -1,0 +1,28 @@
+# Core dependencies - latest stable versions
+langchain
+langchain-community
+langchain-text-splitters
+langchain-core
+langchain-huggingface
+
+# Vector database
+faiss-cpu
+
+# Embeddings
+sentence-transformers
+
+# Document processing
+pypdf
+
+# LLM - use stable version
+groq==0.9.0
+
+# API Backend
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Additional utilities
+python-dotenv
+pydantic
+httpx>=0.27.0

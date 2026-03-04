@@ -98,6 +98,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🤝 Acknowledgments
 
 - Inspired by the need for accessible mental health support
-- Built with ❤️ by [Your Name](https://github.com/yourusername)
+- Built with ❤️ by [Rahul Ahirwar](https://github.com/Rahula-22)
 - Special thanks to the contributors and supporters of this project
 

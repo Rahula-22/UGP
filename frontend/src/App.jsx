@@ -5,6 +5,10 @@ import {
   Loader2, X, Menu
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import Login from './components/Login';
+import Dashboard from './components/Dashboard';
+import Chat from './components/Chat';
+import Assessment from './components/Assessment';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -15,6 +19,9 @@ function App() {
   const [status, setStatus] = useState(null);
   const [showSidebar, setShowSidebar] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [user, setUser] = useState(null);
+  const [sessionToken, setSessionToken] = useState(null);
+  const [currentView, setCurrentView] = useState('login');
   const messagesEndRef = useRef(null);
 
   // Fetch status on mount
@@ -26,6 +33,18 @@ function App() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Check for existing session
+  useEffect(() => {
+    const savedToken = localStorage.getItem('session_token');
+    const savedUser = localStorage.getItem('user');
+    
+    if (savedToken && savedUser) {
+      setSessionToken(savedToken);
+      setUser(JSON.parse(savedUser));
+      setCurrentView('dashboard');
+    }
+  }, []);
 
   const fetchStatus = async () => {
     try {
@@ -66,6 +85,40 @@ function App() {
       setLoading(false);
     }
   };
+
+  const handleLoginSuccess = (userData, token) => {
+    setUser(userData);
+    setSessionToken(token);
+    setCurrentView('dashboard');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('session_token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setSessionToken(null);
+    setCurrentView('login');
+  };
+
+  const handleNavigate = (view) => {
+    setCurrentView(view);
+  };
+
+  if (currentView === 'login') {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  if (currentView === 'dashboard') {
+    return <Dashboard user={user} onNavigate={handleNavigate} onLogout={handleLogout} />;
+  }
+
+  if (currentView === 'chat') {
+    return <Chat sessionToken={sessionToken} onBack={() => handleNavigate('dashboard')} />;
+  }
+
+  if (currentView === 'assessment') {
+    return <Assessment sessionToken={sessionToken} onBack={() => handleNavigate('dashboard')} />;
+  }
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">

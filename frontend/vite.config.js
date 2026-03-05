@@ -10,6 +10,13 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       }
+    },
+    fs: {
+      strict: false
     }
-  }
+  },
+  optimizeDeps: {
+    force: true
+  },
+  cacheDir: './.vite'
 })

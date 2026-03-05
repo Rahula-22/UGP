@@ -7,12 +7,14 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 import os
 import shutil
 from chatbot import MentalHealthChatbot
 from document_processor import DocumentProcessor
 import config
+from database import Database
+import json
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -34,6 +36,9 @@ app.add_middleware(
 chatbot = MentalHealthChatbot(groq_api_key=config.GROQ_API_KEY)
 chatbot.load_knowledge_base()
 
+# Initialize database
+db = Database()
+
 # Request/Response models
 class ChatRequest(BaseModel):
     message: str
@@ -50,6 +55,20 @@ class StatusResponse(BaseModel):
 
 class ApiKeyRequest(BaseModel):
     api_key: str
+
+# Add new models
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class RegisterRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class AssessmentRequest(BaseModel):
+    responses: Dict
+    session_token: str
 
 # API Endpoints
 
@@ -187,6 +206,137 @@ async def list_pdfs():
         return {"pdfs": pdfs}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/register")
+async def register(request: RegisterRequest):
+    """Register a new user"""
+    user_id = db.create_user(request.username, request.email, request.password)
+    
+    if user_id:
+        return {"success": True, "message": "User registered successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Username or email already exists")
+
+@app.post("/api/login")
+async def login(request: LoginRequest):
+    """Login user"""
+    user = db.authenticate_user(request.username, request.password)
+    
+    if user:
+        session_token = db.create_session(user['id'])
+        return {
+            "success": True,
+            "session_token": session_token,
+            "user": user
+        }
+    else:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+@app.post("/api/verify-session")
+async def verify_session(session_token: str):
+    """Verify session token"""
+    user = db.verify_session(session_token)
+    
+    if user:
+        return {"success": True, "user": user}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid session")
+
+@app.post("/api/submit-assessment")
+async def submit_assessment(request: AssessmentRequest):
+    """Submit mental health assessment"""
+    user = db.verify_session(request.session_token)
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    
+    # Calculate score based on responses
+    score = calculate_mental_health_score(request.responses)
+    
+    # Save assessment
+    db.save_assessment(
+        user['id'],
+        json.dumps(request.responses),
+        score,
+        "mental_health_screening"
+    )
+    
+    return {
+        "success": True,
+        "score": score,
+        "interpretation": interpret_score(score)
+    }
+
+@app.get("/api/get-assessments/{session_token}")
+async def get_assessments(session_token: str):
+    """Get user's assessment history"""
+    user = db.verify_session(session_token)
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    
+    assessments = db.get_user_assessments(user['id'])
+    return {"assessments": assessments}
+
+@app.post("/api/chat-with-auth")
+async def chat_with_auth(request: ChatRequest, session_token: str):
+    """Chat with authentication"""
+    user = db.verify_session(session_token)
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    
+    # Use existing chat logic
+    if not chatbot.groq_client and config.GROQ_API_KEY:
+        chatbot.set_groq_api_key(config.GROQ_API_KEY)
+    
+    response, sources = chatbot.chat(request.message)
+    
+    # Save to database
+    db.save_chat_message(user['id'], request.message, response)
+    
+    # Format sources
+    formatted_sources = []
+    for doc in sources:
+        formatted_sources.append({
+            "source": os.path.basename(doc.metadata.get('source', 'Unknown')),
+            "page": doc.metadata.get('page', 'N/A'),
+            "content": doc.page_content[:300] + "..."
+        })
+    
+    return ChatResponse(response=response, sources=formatted_sources)
+
+def calculate_mental_health_score(responses: Dict) -> int:
+    """Calculate mental health score from questionnaire responses"""
+    total_score = 0
+    for question_id, answer in responses.items():
+        total_score += int(answer)
+    return total_score
+
+def interpret_score(score: int) -> Dict:
+    """Interpret mental health score"""
+    if score <= 4:
+        severity = "minimal"
+        recommendation = "Your responses suggest minimal symptoms. Continue practicing self-care."
+    elif score <= 9:
+        severity = "mild"
+        recommendation = "Your responses suggest mild symptoms. Consider speaking with a counselor."
+    elif score <= 14:
+        severity = "moderate"
+        recommendation = "Your responses suggest moderate symptoms. We recommend consulting a mental health professional."
+    elif score <= 19:
+        severity = "moderately_severe"
+        recommendation = "Your responses suggest moderately severe symptoms. Please seek professional help soon."
+    else:
+        severity = "severe"
+        recommendation = "Your responses suggest severe symptoms. Please seek professional help immediately."
+    
+    return {
+        "severity": severity,
+        "score": score,
+        "recommendation": recommendation,
+        "crisis_resources": "If you're in crisis, call 988 (Suicide & Crisis Lifeline) or text 'HELLO' to 741741 (Crisis Text Line)"
+    }
 
 if __name__ == "__main__":
     import uvicorn

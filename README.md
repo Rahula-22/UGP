@@ -31,7 +31,7 @@ To run the project locally, follow these steps:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/mental-health-ai-companion.git
+   git clone https://github.com/Rahul-a22/mental-health-ai-companion.git
    cd mental-health-ai-companion
    ```
 
@@ -53,7 +53,7 @@ To run the project locally, follow these steps:
 
 5. **Run the backend server**
    ```bash
-   uvicorn app.main:app --reload
+   python api.py
    ```
 
 6. **Run the frontend development server**

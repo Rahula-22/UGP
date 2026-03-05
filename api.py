@@ -6,6 +6,7 @@ Provides REST API endpoints for the frontend
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from datetime import datetime
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 import os
@@ -70,6 +71,18 @@ class AssessmentRequest(BaseModel):
     responses: Dict
     session_token: str
 
+class EmotionResponse(BaseModel):
+    primary_emotion: str
+    confidence: float
+    all_emotions: Dict[str, float]
+    intensity: str
+    method: str
+
+class EnhancedChatResponse(BaseModel):
+    response: str
+    sources: List[dict]
+    emotion: EmotionResponse
+
 # API Endpoints
 
 @app.get("/")
@@ -117,7 +130,7 @@ async def chat(request: ChatRequest):
             chatbot.set_groq_api_key(config.GROQ_API_KEY)
         
         # Get response
-        response, sources = chatbot.chat(request.message)
+        response, sources, emotion_data = chatbot.chat(request.message)
         
         # Format sources
         formatted_sources = []
@@ -290,7 +303,7 @@ async def chat_with_auth(request: ChatRequest, session_token: str):
     if not chatbot.groq_client and config.GROQ_API_KEY:
         chatbot.set_groq_api_key(config.GROQ_API_KEY)
     
-    response, sources = chatbot.chat(request.message)
+    response, sources, emotion_data = chatbot.chat(request.message)
     
     # Save to database
     db.save_chat_message(user['id'], request.message, response)
@@ -338,6 +351,63 @@ def interpret_score(score: int) -> Dict:
         "crisis_resources": "If you're in crisis, call 988 (Suicide & Crisis Lifeline) or text 'HELLO' to 741741 (Crisis Text Line)"
     }
 
+@app.post("/api/chat-with-emotion", response_model=EnhancedChatResponse)
+async def chat_with_emotion(request: ChatRequest):
+    """Enhanced chat endpoint with emotion detection"""
+    try:
+        # Set API key if needed
+        if request.api_key:
+            chatbot.set_groq_api_key(request.api_key)
+        elif not chatbot.groq_client and config.GROQ_API_KEY:
+            chatbot.set_groq_api_key(config.GROQ_API_KEY)
+        
+        # Get response with emotion detection
+        response, sources, emotion_data = chatbot.chat(request.message)
+        
+        # Format sources
+        formatted_sources = []
+        for doc in sources:
+            formatted_sources.append({
+                "source": os.path.basename(doc.metadata.get('source', 'Unknown')),
+                "page": doc.metadata.get('page', 'N/A'),
+                "content": doc.page_content[:300] + "..."
+            })
+        
+        return EnhancedChatResponse(
+            response=response,
+            sources=formatted_sources,
+            emotion=EmotionResponse(**emotion_data)
+        )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/emotion-history")
+async def get_emotion_history(limit: int = 10):
+    """Get recent emotion detection history"""
+    try:
+        history = chatbot.get_emotion_history(limit=limit)
+        return {"history": history}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/clear-emotion-history")
+async def clear_emotion_history():
+    """Clear emotion detection history"""
+    try:
+        chatbot.clear_emotion_history()
+        return {"success": True, "message": "Emotion history cleared successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/analyze-emotion")
+async def analyze_emotion(request: ChatRequest):
+    """Standalone emotion analysis without generating response"""
+    try:
+        emotion_data = chatbot.emotion_detector.detect_emotion(request.message)
+        return {"emotion": emotion_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,5 +1,7 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 from langchain_core.documents import Document
+from datetime import datetime
+from emotion_detector import EmotionDetector
 from models import VectorDatabase
 import config
 import os
@@ -19,6 +21,8 @@ class MentalHealthChatbot:
         """
         self.vector_db = VectorDatabase(config.VECTORSTORE_DIRECTORY)
         self.chat_history: List[Tuple[str, str]] = []
+        self.emotion_detector = EmotionDetector()
+        self.emotion_history: List[Dict] = []
         self.groq_client = None
         self.api_key = groq_api_key or config.GROQ_API_KEY or os.getenv("GROQ_API_KEY")
         
@@ -187,31 +191,113 @@ Keep your response warm, supportive, and concise."""
         except Exception as e:
             return f"❌ Error generating response: {str(e)}\n\nPlease check your API key or try again later."
     
-    def chat(self, user_message: str) -> Tuple[str, List[Document]]:
+    def chat(self, user_message: str) -> Tuple[str, List[Document], Dict]:
         """
-        Main chat function that handles user queries.
+        Main chat function with emotion detection.
         
         Args:
             user_message: User's question or message
             
         Returns:
-            Tuple of (response, relevant_documents)
+            Tuple of (response, relevant_documents, emotion_data)
         """
+        # Detect emotion
+        emotion_data = self.emotion_detector.detect_emotion(user_message)
+        
+        # Store emotion in history
+        self.emotion_history.append({
+            'timestamp': datetime.now().isoformat(),
+            'message': user_message,
+            'emotion': emotion_data
+        })
+        
         # Retrieve relevant context
         relevant_docs = self.retrieve_context(user_message)
         
         # Format context
         context = self.format_context(relevant_docs)
         
-        # Generate response using Groq
-        response = self.generate_response_with_groq(user_message, context)
+        # Generate emotion-aware response
+        response = self.generate_emotion_aware_response(
+            user_message, 
+            context, 
+            emotion_data
+        )
         
         # Update chat history
         self.chat_history.append((user_message, response))
         if len(self.chat_history) > config.MAX_HISTORY_LENGTH:
             self.chat_history.pop(0)
         
-        return response, relevant_docs
+        return response, relevant_docs, emotion_data
+    
+    def generate_emotion_aware_response(self, query: str, context: str, emotion: Dict) -> str:
+        """Generate response tailored to detected emotion"""
+        if not self.groq_client:
+            return "⚠️ Groq API client is not initialized. Please check your API key configuration."
+        
+        emotion_guidance = {
+            'sadness': "The user is experiencing sadness. Be extra compassionate, validating, and gentle.",
+            'anxiety': "The user is feeling anxious. Provide reassurance and concrete coping strategies.",
+            'stress': "The user is stressed. Offer practical stress management techniques.",
+            'anger': "The user is feeling anger. Validate their feelings and help them process healthily.",
+            'loneliness': "The user feels lonely. Express warmth and connection.",
+            'positive': "The user is in a positive state. Reinforce their wellbeing.",
+            'neutral': "Respond with supportive, informative guidance."
+        }
+        
+        primary_emotion = emotion.get('primary_emotion', 'neutral')
+        confidence = emotion.get('confidence', 0.0)
+        intensity = emotion.get('intensity', 'medium')
+        emotion_context = emotion_guidance.get(primary_emotion, emotion_guidance['neutral'])
+        
+        if intensity == 'high':
+            intensity_note = "The user's emotional state appears intense. Be especially supportive."
+        else:
+            intensity_note = ""
+        
+        if context == "No relevant information found in the knowledge base.":
+            prompt = f"""You are a supportive mental health companion.
+**Detected Emotion:** {primary_emotion} (confidence: {confidence:.0%}, intensity: {intensity})
+**Guidance:** {emotion_context}
+
+A user said: "{query}"
+
+Provide a brief, empathetic response acknowledging their emotional state."""
+        else:
+            prompt = f"""You are a supportive mental health companion.
+**Detected Emotion:** {primary_emotion} (confidence: {confidence:.0%}, intensity: {intensity})
+**Guidance:** {emotion_context}
+
+**Context from documents:**
+{context}
+
+**User's message:**
+{query}
+
+Answer based on the context, adjusted for their emotional state of {primary_emotion}."""
+
+        try:
+            chat_completion = self.groq_client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": f"You are a compassionate mental health companion. The user is experiencing {primary_emotion}."},
+                    {"role": "user", "content": prompt}
+                ],
+                model=config.GROQ_MODEL,
+                temperature=config.GROQ_TEMPERATURE,
+                max_tokens=config.GROQ_MAX_TOKENS,
+            )
+            return chat_completion.choices[0].message.content
+        except Exception as e:
+            return f"❌ Error: {str(e)}"
+    
+    def get_emotion_history(self, limit: int = 10) -> List[Dict]:
+        """Get recent emotion history"""
+        return self.emotion_history[-limit:]
+    
+    def clear_emotion_history(self) -> None:
+        """Clear emotion history"""
+        self.emotion_history = []
     
     def clear_history(self) -> None:
         """Clear the chat history."""

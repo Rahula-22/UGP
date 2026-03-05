@@ -32,7 +32,7 @@ To run the project locally, follow these steps:
 1. **Clone the repository**
    ```bash
    git clone https://github.com/Rahul-a22/mental-health-ai-companion.git
-   cd mental-health-ai-companion
+   cd UGP
    ```
 
 2. **Install Python dependencies**

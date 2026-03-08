@@ -1,19 +1,69 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Send, Brain, Loader2, ArrowLeft } from 'lucide-react';
+import { Send, Brain, Loader2, ArrowLeft, Mic, MicOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 const API_BASE = 'http://localhost:8000';
+
+const LANGUAGES = [
+  { label: 'English',              code: 'en-US', name: 'English' },
+  { label: 'हिंदी (Hindi)',         code: 'hi-IN', name: 'Hindi' },
+  { label: 'বাংলা (Bengali)',       code: 'bn-IN', name: 'Bengali' },
+  { label: 'தமிழ் (Tamil)',         code: 'ta-IN', name: 'Tamil' },
+  { label: 'తెలుగు (Telugu)',       code: 'te-IN', name: 'Telugu' },
+  { label: 'मराठी (Marathi)',       code: 'mr-IN', name: 'Marathi' },
+  { label: 'ગુજરાતી (Gujarati)',    code: 'gu-IN', name: 'Gujarati' },
+  { label: 'ಕನ್ನಡ (Kannada)',       code: 'kn-IN', name: 'Kannada' },
+  { label: 'മലയാളം (Malayalam)',    code: 'ml-IN', name: 'Malayalam' },
+  { label: 'ਪੰਜਾਬੀ (Punjabi)',      code: 'pa-IN', name: 'Punjabi' },
+  { label: 'اردو (Urdu)',           code: 'ur-IN', name: 'Urdu' },
+];
 
 function Chat({ sessionToken, onBack }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [selectedLang, setSelectedLang] = useState(LANGUAGES[0]);
+  const [voiceSupported] = useState(
+    () => !!(window.SpeechRecognition || window.webkitSpeechRecognition)
+  );
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = selectedLang.code;
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.onstart = () => setIsListening(true);
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(prev => (prev ? prev + ' ' + transcript : transcript));
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -26,7 +76,8 @@ function Chat({ sessionToken, onBack }) {
 
     try {
       const response = await axios.post(`${API_BASE}/api/chat`, {
-        message: userMessage
+        message: userMessage,
+        language: selectedLang.name
       });
 
       setMessages(prev => [...prev, { 
@@ -119,15 +170,48 @@ function Chat({ sessionToken, onBack }) {
 
         <div className="border-t border-gray-200 bg-white p-4">
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-between mb-2">
+              <select
+                value={selectedLang.code}
+                onChange={(e) => setSelectedLang(LANGUAGES.find(l => l.code === e.target.value))}
+                disabled={loading || isListening}
+                className="text-sm px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 bg-white text-gray-700"
+              >
+                {LANGUAGES.map(lang => (
+                  <option key={lang.code} value={lang.code}>{lang.label}</option>
+                ))}
+              </select>
+              {isListening && (
+                <div className="flex items-center gap-2 text-red-500 text-sm">
+                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse inline-block"></span>
+                  Listening... speak now
+                </div>
+              )}
+            </div>
             <div className="flex gap-3">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask me anything about mental health..."
+                placeholder={isListening ? 'Listening...' : 'Ask me anything about mental health...'}
                 disabled={loading}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
               />
+              {voiceSupported && (
+                <button
+                  type="button"
+                  onClick={toggleVoiceInput}
+                  disabled={loading}
+                  title={isListening ? 'Stop listening' : 'Speak your question'}
+                  className={`px-4 py-3 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center ${
+                    isListening
+                      ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                  }`}
+                >
+                  {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={loading || !input.trim()}

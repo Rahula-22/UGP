@@ -1,6 +1,6 @@
 # 🧠 Mental Health AI Companion
 
-A RAG (Retrieval-Augmented Generation) based AI chatbot that provides mental health support by answering questions from uploaded PDF documents. Built with Python, FastAPI, React, and Groq AI.
+A RAG (Retrieval-Augmented Generation) based AI chatbot that provides mental health support by answering queries related to mental health. Built with Python, FastAPI, React, and Groq AI.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![React](https://img.shields.io/badge/React-18+-61DAFB.svg)

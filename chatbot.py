@@ -125,20 +125,23 @@ class MentalHealthChatbot:
         
         return "\n".join(context_parts)
     
-    def generate_response_with_groq(self, query: str, context: str) -> str:
+    def generate_response_with_groq(self, query: str, context: str, language: str = 'English') -> str:
         """
         Generate a response using Groq LLM based on the query and retrieved context.
-        
+
         Args:
             query: User's question
             context: Retrieved context from documents
-            
+            language: Language to respond in
+
         Returns:
             Generated response from Groq
         """
         if not self.groq_client:
             return "⚠️ Groq API client is not initialized. Please check your API key configuration or contact the administrator."
-        
+
+        lang_instruction = f"IMPORTANT: You must respond ENTIRELY in {language}. Even if your internal reasoning is in English, your final reply must be in {language} only."
+
         if context == "No relevant information found in the knowledge base.":
             prompt = f"""You are a supportive mental health companion. A user asked: "{query}"
 
@@ -149,7 +152,9 @@ Please provide a brief, empathetic response explaining that you don't have speci
 2. Ask about a different aspect of mental health
 3. Consult with a healthcare professional for medical advice
 
-Keep your response warm, supportive, and concise."""
+Keep your response warm, supportive, and concise.
+
+{lang_instruction}"""
         else:
             prompt = f"""You are a supportive mental health and well-being AI companion. Your role is to provide helpful, accurate, and empathetic information based on the documents provided.
 
@@ -166,6 +171,7 @@ Keep your response warm, supportive, and concise."""
 - Always remind users that this is informational and they should consult healthcare professionals for medical advice
 - Keep your response clear, concise, and helpful
 - Use markdown formatting for better readability
+- {lang_instruction}
 
 **Your response:**"""
 
@@ -174,7 +180,7 @@ Keep your response warm, supportive, and concise."""
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a compassionate mental health companion providing information based on medical documents. Always be supportive, accurate, and remind users to seek professional help when needed."
+                        "content": f"You are a compassionate mental health companion providing information based on medical documents. Always be supportive, accurate, and remind users to seek professional help when needed. You must respond in {language} only."
                     },
                     {
                         "role": "user",
@@ -185,13 +191,13 @@ Keep your response warm, supportive, and concise."""
                 temperature=config.GROQ_TEMPERATURE,
                 max_tokens=config.GROQ_MAX_TOKENS,
             )
-            
+
             return chat_completion.choices[0].message.content
-            
+
         except Exception as e:
             return f"❌ Error generating response: {str(e)}\n\nPlease check your API key or try again later."
-    
-    def chat(self, user_message: str) -> Tuple[str, List[Document], Dict]:
+
+    def chat(self, user_message: str, language: str = 'English') -> Tuple[str, List[Document], Dict]:
         """
         Main chat function with emotion detection.
         
@@ -219,9 +225,10 @@ Keep your response warm, supportive, and concise."""
         
         # Generate emotion-aware response
         response = self.generate_emotion_aware_response(
-            user_message, 
-            context, 
-            emotion_data
+            user_message,
+            context,
+            emotion_data,
+            language
         )
         
         # Update chat history
@@ -231,11 +238,11 @@ Keep your response warm, supportive, and concise."""
         
         return response, relevant_docs, emotion_data
     
-    def generate_emotion_aware_response(self, query: str, context: str, emotion: Dict) -> str:
+    def generate_emotion_aware_response(self, query: str, context: str, emotion: Dict, language: str = 'English') -> str:
         """Generate response tailored to detected emotion"""
         if not self.groq_client:
             return "⚠️ Groq API client is not initialized. Please check your API key configuration."
-        
+
         emotion_guidance = {
             'sadness': "The user is experiencing sadness. Be extra compassionate, validating, and gentle.",
             'anxiety': "The user is feeling anxious. Provide reassurance and concrete coping strategies.",
@@ -245,17 +252,19 @@ Keep your response warm, supportive, and concise."""
             'positive': "The user is in a positive state. Reinforce their wellbeing.",
             'neutral': "Respond with supportive, informative guidance."
         }
-        
+
         primary_emotion = emotion.get('primary_emotion', 'neutral')
         confidence = emotion.get('confidence', 0.0)
         intensity = emotion.get('intensity', 'medium')
         emotion_context = emotion_guidance.get(primary_emotion, emotion_guidance['neutral'])
-        
+
         if intensity == 'high':
             intensity_note = "The user's emotional state appears intense. Be especially supportive."
         else:
             intensity_note = ""
-        
+
+        lang_instruction = f"IMPORTANT: Respond ENTIRELY in {language}. Your full reply must be written in {language} only."
+
         if context == "No relevant information found in the knowledge base.":
             prompt = f"""You are a supportive mental health companion.
 **Detected Emotion:** {primary_emotion} (confidence: {confidence:.0%}, intensity: {intensity})
@@ -263,7 +272,8 @@ Keep your response warm, supportive, and concise."""
 
 A user said: "{query}"
 
-Provide a brief, empathetic response acknowledging their emotional state."""
+Provide a brief, empathetic response acknowledging their emotional state.
+{lang_instruction}"""
         else:
             prompt = f"""You are a supportive mental health companion.
 **Detected Emotion:** {primary_emotion} (confidence: {confidence:.0%}, intensity: {intensity})
@@ -275,12 +285,13 @@ Provide a brief, empathetic response acknowledging their emotional state."""
 **User's message:**
 {query}
 
-Answer based on the context, adjusted for their emotional state of {primary_emotion}."""
+Answer based on the context, adjusted for their emotional state of {primary_emotion}.
+{lang_instruction}"""
 
         try:
             chat_completion = self.groq_client.chat.completions.create(
                 messages=[
-                    {"role": "system", "content": f"You are a compassionate mental health companion. The user is experiencing {primary_emotion}."},
+                    {"role": "system", "content": f"You are a compassionate mental health companion. The user is experiencing {primary_emotion}. You must respond in {language} only."},
                     {"role": "user", "content": prompt}
                 ],
                 model=config.GROQ_MODEL,

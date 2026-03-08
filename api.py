@@ -44,6 +44,7 @@ db = Database()
 class ChatRequest(BaseModel):
     message: str
     api_key: Optional[str] = None
+    language: Optional[str] = 'English'
 
 class ChatResponse(BaseModel):
     response: str
@@ -70,6 +71,7 @@ class RegisterRequest(BaseModel):
 class AssessmentRequest(BaseModel):
     responses: Dict
     session_token: str
+    assessment_type: Optional[str] = 'dass42'
 
 class EmotionResponse(BaseModel):
     primary_emotion: str
@@ -130,8 +132,8 @@ async def chat(request: ChatRequest):
             chatbot.set_groq_api_key(config.GROQ_API_KEY)
         
         # Get response
-        response, sources, emotion_data = chatbot.chat(request.message)
-        
+        response, sources, emotion_data = chatbot.chat(request.message, language=request.language or 'English')
+
         # Format sources
         formatted_sources = []
         for doc in sources:
@@ -140,9 +142,9 @@ async def chat(request: ChatRequest):
                 "page": doc.metadata.get('page', 'N/A'),
                 "content": doc.page_content[:300] + "..."
             })
-        
+
         return ChatResponse(response=response, sources=formatted_sources)
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -263,21 +265,22 @@ async def submit_assessment(request: AssessmentRequest):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid session")
     
-    # Calculate score based on responses
-    score = calculate_mental_health_score(request.responses)
-    
+    # Calculate score based on responses and assessment type
+    assessment_type = request.assessment_type or 'dass42'
+    score = calculate_mental_health_score(request.responses, assessment_type)
+
     # Save assessment
     db.save_assessment(
         user['id'],
         json.dumps(request.responses),
         score,
-        "mental_health_screening"
+        assessment_type
     )
-    
+
     return {
         "success": True,
         "score": score,
-        "interpretation": interpret_score(score)
+        "interpretation": interpret_score(score, assessment_type)
     }
 
 @app.get("/api/get-assessments/{session_token}")
@@ -303,8 +306,8 @@ async def chat_with_auth(request: ChatRequest, session_token: str):
     if not chatbot.groq_client and config.GROQ_API_KEY:
         chatbot.set_groq_api_key(config.GROQ_API_KEY)
     
-    response, sources, emotion_data = chatbot.chat(request.message)
-    
+    response, sources, emotion_data = chatbot.chat(request.message, language=request.language or 'English')
+
     # Save to database
     db.save_chat_message(user['id'], request.message, response)
     
@@ -319,37 +322,109 @@ async def chat_with_auth(request: ChatRequest, session_token: str):
     
     return ChatResponse(response=response, sources=formatted_sources)
 
-def calculate_mental_health_score(responses: Dict) -> int:
-    """Calculate mental health score from questionnaire responses"""
-    total_score = 0
-    for question_id, answer in responses.items():
-        total_score += int(answer)
-    return total_score
+def calculate_mental_health_score(responses: Dict, assessment_type: str = 'dass42') -> int:
+    """Calculate total score from questionnaire responses."""
+    return sum(int(v) for v in responses.values())
 
-def interpret_score(score: int) -> Dict:
-    """Interpret mental health score"""
-    if score <= 4:
-        severity = "minimal"
-        recommendation = "Your responses suggest minimal symptoms. Continue practicing self-care."
-    elif score <= 9:
-        severity = "mild"
-        recommendation = "Your responses suggest mild symptoms. Consider speaking with a counselor."
-    elif score <= 14:
-        severity = "moderate"
-        recommendation = "Your responses suggest moderate symptoms. We recommend consulting a mental health professional."
-    elif score <= 19:
-        severity = "moderately_severe"
-        recommendation = "Your responses suggest moderately severe symptoms. Please seek professional help soon."
+
+def interpret_score(score: int, assessment_type: str = 'dass42') -> Dict:
+    """Interpret score according to the relevant assessment scale."""
+
+    if assessment_type == 'phq9':
+        if score <= 4:
+            severity = "minimal"
+            description = "Minimal or no depression"
+            recommendation = "Monitor; may not require treatment."
+        elif score <= 9:
+            severity = "mild"
+            description = "Mild depression"
+            recommendation = "Clinical judgement required; consider watchful waiting and repeat PHQ-9 at follow-up."
+        elif score <= 14:
+            severity = "moderate"
+            description = "Moderate depression"
+            recommendation = "Consider a treatment plan including counselling, follow-up, or pharmacotherapy."
+        elif score <= 19:
+            severity = "moderately_severe"
+            description = "Moderately severe depression"
+            recommendation = "Active treatment recommended — antidepressants and/or psychotherapy."
+        else:
+            severity = "severe"
+            description = "Severe depression"
+            recommendation = "Immediate initiation of pharmacotherapy; if severe impairment consider expedited specialist referral."
+
+        critical_actions = [
+            "Perform suicide risk assessment if item 9 (thoughts of self-harm) is scored > 0.",
+            "Rule out bipolar disorder, normal bereavement, and medical disorders causing depression.",
+        ]
+        return {
+            "assessment_type": "PHQ-9",
+            "severity": severity,
+            "description": description,
+            "score": score,
+            "score_range": "0–27",
+            "recommendation": recommendation,
+            "critical_actions": critical_actions,
+            "crisis_resources": "If you are in crisis, call or text 988 (Suicide & Crisis Lifeline) or text 'HELLO' to 741741.",
+        }
+
+    elif assessment_type == 'gad7':
+        if score <= 4:
+            severity = "minimal"
+            description = "Minimal anxiety"
+            recommendation = "Monitor symptoms."
+        elif score <= 9:
+            severity = "mild"
+            description = "Mild anxiety"
+            recommendation = "Monitor; possible clinically significant anxiety."
+        elif score <= 14:
+            severity = "moderate"
+            description = "Moderate anxiety"
+            recommendation = "Possible clinically significant anxiety — consider further evaluation and treatment."
+        else:
+            severity = "severe"
+            description = "Severe anxiety"
+            recommendation = "Active treatment likely needed — refer for further evaluation."
+
+        critical_actions = [
+            "Rule out medical causes of anxiety before diagnosing an anxiety disorder (e.g., ECG for arrhythmias, TSH for thyroid disease).",
+            "A score ≥10 is the recommended cut-off for further evaluation of GAD.",
+        ]
+        return {
+            "assessment_type": "GAD-7",
+            "severity": severity,
+            "description": description,
+            "score": score,
+            "score_range": "0–21",
+            "recommendation": recommendation,
+            "critical_actions": critical_actions,
+            "crisis_resources": "If you are in crisis, call or text 988 (Suicide & Crisis Lifeline) or text 'HELLO' to 741741.",
+        }
+
     else:
-        severity = "severe"
-        recommendation = "Your responses suggest severe symptoms. Please seek professional help immediately."
-    
-    return {
-        "severity": severity,
-        "score": score,
-        "recommendation": recommendation,
-        "crisis_resources": "If you're in crisis, call 988 (Suicide & Crisis Lifeline) or text 'HELLO' to 741741 (Crisis Text Line)"
-    }
+        # DASS-42 (legacy path — total score interpretation)
+        if score <= 4:
+            severity = "minimal"
+            recommendation = "Your responses suggest minimal symptoms. Continue practising self-care."
+        elif score <= 9:
+            severity = "mild"
+            recommendation = "Your responses suggest mild symptoms. Consider speaking with a counsellor."
+        elif score <= 14:
+            severity = "moderate"
+            recommendation = "Your responses suggest moderate symptoms. We recommend consulting a mental health professional."
+        elif score <= 19:
+            severity = "moderately_severe"
+            recommendation = "Your responses suggest moderately severe symptoms. Please seek professional help soon."
+        else:
+            severity = "severe"
+            recommendation = "Your responses suggest severe symptoms. Please seek professional help immediately."
+
+        return {
+            "assessment_type": "DASS-42",
+            "severity": severity,
+            "score": score,
+            "recommendation": recommendation,
+            "crisis_resources": "If you're in crisis, call 988 (Suicide & Crisis Lifeline) or text 'HELLO' to 741741.",
+        }
 
 @app.post("/api/chat-with-emotion", response_model=EnhancedChatResponse)
 async def chat_with_emotion(request: ChatRequest):
@@ -362,7 +437,7 @@ async def chat_with_emotion(request: ChatRequest):
             chatbot.set_groq_api_key(config.GROQ_API_KEY)
         
         # Get response with emotion detection
-        response, sources, emotion_data = chatbot.chat(request.message)
+        response, sources, emotion_data = chatbot.chat(request.message, language=request.language or 'English')
         
         # Format sources
         formatted_sources = []

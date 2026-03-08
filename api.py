@@ -85,6 +85,32 @@ class EnhancedChatResponse(BaseModel):
     sources: List[dict]
     emotion: EmotionResponse
 
+class AssessmentSupportRequest(BaseModel):
+    session_token: str
+    score: int
+    assessment_type: str
+    severity: str
+    item9_positive: bool = False
+    language: Optional[str] = 'English'
+    dass42_subscales: Optional[Dict] = None
+
+class MoodJournalRequest(BaseModel):
+    session_token: str
+    mood_score: int
+    emotions: List[str] = []
+    triggers: str = ''
+    notes: str = ''
+
+class AssessmentChatRequest(BaseModel):
+    session_token: str
+    message: str
+    assessment_type: str
+    score: int
+    severity: str
+    chat_history: List[Dict] = []
+    language: Optional[str] = 'English'
+    dass42_subscales: Optional[Dict] = None
+
 # API Endpoints
 
 @app.get("/")
@@ -280,7 +306,7 @@ async def submit_assessment(request: AssessmentRequest):
     return {
         "success": True,
         "score": score,
-        "interpretation": interpret_score(score, assessment_type)
+        "interpretation": interpret_score(score, assessment_type, request.responses)
     }
 
 @app.get("/api/get-assessments/{session_token}")
@@ -327,7 +353,54 @@ def calculate_mental_health_score(responses: Dict, assessment_type: str = 'dass4
     return sum(int(v) for v in responses.values())
 
 
-def interpret_score(score: int, assessment_type: str = 'dass42') -> Dict:
+# DASS-42 question → subscale mapping (matches frontend question list)
+_DASS42_SCALES: Dict[int, str] = {
+    1: 'stress',      2: 'anxiety',     3: 'depression',  4: 'anxiety',
+    5: 'depression',  6: 'stress',      7: 'anxiety',     8: 'stress',
+    9: 'anxiety',    10: 'depression', 11: 'stress',     12: 'stress',
+   13: 'depression', 14: 'stress',     15: 'anxiety',    16: 'depression',
+   17: 'depression', 18: 'stress',     19: 'anxiety',    20: 'anxiety',
+   21: 'depression', 22: 'stress',     23: 'anxiety',    24: 'depression',
+   25: 'anxiety',    26: 'depression', 27: 'stress',     28: 'anxiety',
+   29: 'stress',     30: 'anxiety',    31: 'depression', 32: 'stress',
+   33: 'stress',     34: 'depression', 35: 'stress',     36: 'anxiety',
+   37: 'depression', 38: 'depression', 39: 'stress',     40: 'anxiety',
+   41: 'anxiety',    42: 'depression',
+}
+
+
+def calculate_dass42_subscales(responses: Dict) -> Dict[str, int]:
+    """Return DASS-42 subscale scores (raw item sum × 2 per protocol)."""
+    dep = anx = str_ = 0
+    for q_id_str, val in responses.items():
+        scale = _DASS42_SCALES.get(int(q_id_str), 'depression')
+        v = int(val)
+        if scale == 'depression':
+            dep += v
+        elif scale == 'anxiety':
+            anx += v
+        else:
+            str_ += v
+    return {'depression': dep * 2, 'anxiety': anx * 2, 'stress': str_ * 2}
+
+
+def _dass42_subscale_severity(score: int, scale: str) -> Dict[str, str]:
+    """Return severity key and display label for one DASS-42 subscale score."""
+    thresholds: Dict[str, list] = {
+        'depression': [(9, 'normal', 'Normal'), (13, 'mild', 'Mild'),
+                       (20, 'moderate', 'Moderate'), (27, 'severe', 'Severe')],
+        'anxiety':    [(7, 'normal', 'Normal'),  (9,  'mild', 'Mild'),
+                       (14, 'moderate', 'Moderate'), (19, 'severe', 'Severe')],
+        'stress':     [(14, 'normal', 'Normal'), (18, 'mild', 'Mild'),
+                       (25, 'moderate', 'Moderate'), (33, 'severe', 'Severe')],
+    }
+    for t, key, label in thresholds.get(scale, thresholds['depression']):
+        if score <= t:
+            return {'severity': key, 'label': label}
+    return {'severity': 'extremely_severe', 'label': 'Extremely Severe'}
+
+
+def interpret_score(score: int, assessment_type: str = 'dass42', responses: Dict = None) -> Dict:
     """Interpret score according to the relevant assessment scale."""
 
     if assessment_type == 'phq9':
@@ -401,30 +474,50 @@ def interpret_score(score: int, assessment_type: str = 'dass42') -> Dict:
         }
 
     else:
-        # DASS-42 (legacy path — total score interpretation)
-        if score <= 4:
-            severity = "minimal"
-            recommendation = "Your responses suggest minimal symptoms. Continue practising self-care."
-        elif score <= 9:
-            severity = "mild"
-            recommendation = "Your responses suggest mild symptoms. Consider speaking with a counsellor."
-        elif score <= 14:
-            severity = "moderate"
-            recommendation = "Your responses suggest moderate symptoms. We recommend consulting a mental health professional."
-        elif score <= 19:
-            severity = "moderately_severe"
-            recommendation = "Your responses suggest moderately severe symptoms. Please seek professional help soon."
-        else:
-            severity = "severe"
-            recommendation = "Your responses suggest severe symptoms. Please seek professional help immediately."
+        # DASS-42 — proper subscale scoring
+        if responses:
+            subscales = calculate_dass42_subscales(responses)
+            dep_s = _dass42_subscale_severity(subscales['depression'], 'depression')
+            anx_s = _dass42_subscale_severity(subscales['anxiety'],    'anxiety')
+            str_s = _dass42_subscale_severity(subscales['stress'],     'stress')
 
-        return {
-            "assessment_type": "DASS-42",
-            "severity": severity,
-            "score": score,
-            "recommendation": recommendation,
-            "crisis_resources": "If you're in crisis, call 988 (Suicide & Crisis Lifeline) or text 'HELLO' to 741741.",
-        }
+            _order = ['normal', 'mild', 'moderate', 'severe', 'extremely_severe']
+            dominant = max(
+                [dep_s['severity'], anx_s['severity'], str_s['severity']],
+                key=lambda s: _order.index(s)
+            )
+            return {
+                "assessment_type": "DASS-42",
+                "severity": dominant,
+                "score": score,
+                "score_range": "0–126",
+                "subscales": {
+                    "depression": {"score": subscales["depression"], "severity": dep_s["severity"], "label": dep_s["label"]},
+                    "anxiety":    {"score": subscales["anxiety"],    "severity": anx_s["severity"], "label": anx_s["label"]},
+                    "stress":     {"score": subscales["stress"],     "severity": str_s["severity"], "label": str_s["label"]},
+                },
+                "crisis_resources": "If you're in crisis, call 988 (Suicide & Crisis Lifeline) or text 'HELLO' to 741741.",
+            }
+        else:
+            # Fallback without responses: map raw total (0–126) to severity bands
+            _pct = score / 126
+            if _pct < 0.20:
+                severity = "normal"
+            elif _pct < 0.35:
+                severity = "mild"
+            elif _pct < 0.55:
+                severity = "moderate"
+            elif _pct < 0.75:
+                severity = "severe"
+            else:
+                severity = "extremely_severe"
+            return {
+                "assessment_type": "DASS-42",
+                "severity": severity,
+                "score": score,
+                "score_range": "0–126",
+                "crisis_resources": "If you're in crisis, call 988 (Suicide & Crisis Lifeline) or text 'HELLO' to 741741.",
+            }
 
 @app.post("/api/chat-with-emotion", response_model=EnhancedChatResponse)
 async def chat_with_emotion(request: ChatRequest):
@@ -483,6 +576,85 @@ async def analyze_emotion(request: ChatRequest):
         return {"emotion": emotion_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+@app.post("/api/assessment-support")
+async def assessment_support(request: AssessmentSupportRequest):
+    """Generate AI-powered plain-language interpretation of an assessment result"""
+    user = db.verify_session(request.session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        if not chatbot.groq_client and config.GROQ_API_KEY:
+            chatbot.set_groq_api_key(config.GROQ_API_KEY)
+        interpretation = chatbot.generate_assessment_support(
+            score=request.score,
+            assessment_type=request.assessment_type,
+            severity=request.severity,
+            item9_positive=request.item9_positive,
+            language=request.language or 'English',
+            dass42_subscales=request.dass42_subscales,
+        )
+        return {"interpretation": interpretation}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/assessment-chat")
+async def assessment_chat(request: AssessmentChatRequest):
+    """Supportive chat endpoint with assessment context — no RAG retrieval"""
+    user = db.verify_session(request.session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        if not chatbot.groq_client and config.GROQ_API_KEY:
+            chatbot.set_groq_api_key(config.GROQ_API_KEY)
+        response = chatbot.generate_assessment_chat_response(
+            user_message=request.message,
+            assessment_type=request.assessment_type,
+            score=request.score,
+            severity=request.severity,
+            chat_history=request.chat_history,
+            language=request.language or 'English',
+            dass42_subscales=request.dass42_subscales,
+        )
+        db.save_chat_message(user['id'], request.message, response)
+        return {"response": response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/mood-journal")
+async def save_mood_journal(request: MoodJournalRequest):
+    """Save a mood journal entry"""
+    user = db.verify_session(request.session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        import json as _json
+        entry_id = db.save_journal_entry(
+            user_id=user['id'],
+            mood_score=request.mood_score,
+            emotions=_json.dumps(request.emotions),
+            triggers=request.triggers,
+            notes=request.notes,
+        )
+        return {"success": True, "entry_id": entry_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/mood-journal/{session_token}")
+async def get_mood_journal(session_token: str, limit: int = 30):
+    """Get mood journal entries for a user"""
+    user = db.verify_session(session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        entries = db.get_journal_entries(user['id'], limit=limit)
+        return {"entries": entries}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

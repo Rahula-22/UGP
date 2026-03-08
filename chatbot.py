@@ -310,6 +310,145 @@ Answer based on the context, adjusted for their emotional state of {primary_emot
         """Clear emotion history"""
         self.emotion_history = []
     
+    def generate_assessment_support(
+        self,
+        score: int,
+        assessment_type: str,
+        severity: str,
+        item9_positive: bool = False,
+        language: str = 'English',
+        dass42_subscales: dict = None,
+    ) -> str:
+        """Generate a plain-language, compassionate interpretation of assessment results."""
+        if not self.groq_client:
+            return "Unable to generate interpretation — please check API configuration."
+
+        max_scores = {'phq9': 27, 'gad7': 21, 'dass42': 126}
+        max_score = max_scores.get(assessment_type, 100)
+
+        type_names = {
+            'phq9':   'PHQ-9 (Depression Screening)',
+            'gad7':   'GAD-7 (Anxiety Screening)',
+            'dass42': 'DASS-42 (Depression, Anxiety & Stress)'
+        }
+        type_name = type_names.get(assessment_type, assessment_type)
+
+        # Build score detail line — use subscale breakdown for DASS-42 when available
+        if assessment_type == 'dass42' and dass42_subscales:
+            dep = dass42_subscales.get('depression', {})
+            anx = dass42_subscales.get('anxiety', {})
+            str_ = dass42_subscales.get('stress', {})
+            score_detail = (
+                f"Subscale scores (each out of 84):\n"
+                f"  Depression: {dep.get('score', '?')}/84 — {dep.get('label', '?')}\n"
+                f"  Anxiety:    {anx.get('score', '?')}/84 — {anx.get('label', '?')}\n"
+                f"  Stress:     {str_.get('score', '?')}/84 — {str_.get('label', '?')}\n"
+                f"Dominant severity: {severity.replace('_', ' ')}"
+            )
+        else:
+            score_detail = f"Score: {score}/{max_score}\nSeverity level: {severity.replace('_', ' ')}"
+
+        item9_note = (
+            "\nNOTE: The user indicated thoughts of self-harm or being better off dead (item 9 > 0). "
+            "Acknowledge this gently and include crisis resources (988, text HELLO to 741741) in your response."
+        ) if item9_positive else ""
+
+        prompt = f"""A user has just completed a {type_name} screening.
+{score_detail}
+{item9_note}
+
+Provide a compassionate, plain-language response in exactly 3 short paragraphs:
+1. What these results mean in everyday, jargon-free terms (2–3 sentences).
+2. How someone with these results might be feeling day-to-day (2 sentences).
+3. One encouraging sentence that acknowledges their courage in doing this self-check.
+
+Rules:
+- Never suggest a diagnosis
+- Clearly state this is a screening tool, not a clinical assessment
+- Be warm, non-alarmist, and supportive
+- Keep total response under 180 words
+
+Respond in {language}."""
+
+        try:
+            completion = self.groq_client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": "You are a compassionate mental health companion providing clear, supportive explanations. Never diagnose."},
+                    {"role": "user", "content": prompt}
+                ],
+                model=config.GROQ_MODEL,
+                temperature=0.7,
+                max_tokens=400,
+            )
+            return completion.choices[0].message.content
+        except Exception as e:
+            return "We couldn't generate a personalised interpretation right now. Please review the score summary above."
+
+    def generate_assessment_chat_response(
+        self,
+        user_message: str,
+        assessment_type: str,
+        score: int,
+        severity: str,
+        chat_history: list,
+        language: str = 'English',
+        dass42_subscales: dict = None,
+    ) -> str:
+        """Generate a supportive conversational response with assessment context."""
+        if not self.groq_client:
+            return "⚠️ Groq API client is not initialized."
+
+        type_names = {'phq9': 'PHQ-9 (depression)', 'gad7': 'GAD-7 (anxiety)', 'dass42': 'DASS-42'}
+        type_label = type_names.get(assessment_type, assessment_type)
+
+        # Build context description for DASS-42 subscales when available
+        if assessment_type == 'dass42' and dass42_subscales:
+            dep = dass42_subscales.get('depression', {})
+            anx = dass42_subscales.get('anxiety', {})
+            str_ = dass42_subscales.get('stress', {})
+            score_context = (
+                f"subscale scores of Depression {dep.get('score', '?')}/84 ({dep.get('label', '?')}), "
+                f"Anxiety {anx.get('score', '?')}/84 ({anx.get('label', '?')}), "
+                f"Stress {str_.get('score', '?')}/84 ({str_.get('label', '?')})"
+            )
+        else:
+            score_context = f"a score of {score}, indicating {severity.replace('_', ' ')} symptoms"
+
+        messages = [
+            {
+                "role": "system",
+                "content": f"""You are a compassionate mental health support companion. The user completed a {type_label} screening with {score_context}.
+
+Your role:
+- Provide warm emotional support and active listening
+- Ask one open, reflective question per response about their feelings, triggers, or recent experiences
+- Suggest brief coping strategies when the user seems ready
+- Use empathetic, non-judgmental language
+- NEVER diagnose or prescribe
+- Gently encourage professional help if symptoms seem severe or persistent
+- If the user expresses thoughts of self-harm or suicide, immediately provide: 988 Suicide & Crisis Lifeline (call/text), or text HELLO to 741741
+
+Respond in {language}. Keep responses warm but concise (under 120 words)."""
+            }
+        ]
+
+        # Include recent chat history (last 8 turns)
+        for entry in chat_history[-8:]:
+            messages.append({"role": entry["role"], "content": entry["content"]})
+
+        messages.append({"role": "user", "content": user_message})
+
+        try:
+            completion = self.groq_client.chat.completions.create(
+                messages=messages,
+                model=config.GROQ_MODEL,
+                temperature=0.8,
+                max_tokens=300,
+            )
+            return completion.choices[0].message.content
+        except Exception as e:
+            return f"❌ Error: {str(e)}"
+
     def clear_history(self) -> None:
         """Clear the chat history."""
         self.chat_history = []

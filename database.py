@@ -73,7 +73,21 @@ class Database:
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         """)
-        
+
+        # Mood journal table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS mood_journal (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                mood_score INTEGER NOT NULL,
+                emotions TEXT,
+                triggers TEXT,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )
+        """)
+
         conn.commit()
         conn.close()
     
@@ -204,10 +218,35 @@ class Database:
         """Save chat message"""
         conn = self.get_connection()
         cursor = conn.cursor()
-        
+
         cursor.execute(
             "INSERT INTO chat_history (user_id, message, response) VALUES (?, ?, ?)",
             (user_id, message, response)
         )
         conn.commit()
         conn.close()
+
+    def save_journal_entry(self, user_id: int, mood_score: int, emotions: str, triggers: str, notes: str) -> int:
+        """Save a mood journal entry and return its id"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO mood_journal (user_id, mood_score, emotions, triggers, notes) VALUES (?, ?, ?, ?, ?)",
+            (user_id, mood_score, emotions, triggers, notes)
+        )
+        conn.commit()
+        entry_id = cursor.lastrowid
+        conn.close()
+        return entry_id
+
+    def get_journal_entries(self, user_id: int, limit: int = 30) -> List[Dict]:
+        """Get recent mood journal entries for a user"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM mood_journal WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
+            (user_id, limit)
+        )
+        entries = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return entries

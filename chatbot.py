@@ -107,96 +107,117 @@ class MentalHealthChatbot:
     def format_context(self, documents: List[Document]) -> str:
         """
         Format retrieved documents into a context string.
-        
+        Clinical PDF sources and conversation-dataset examples are labelled
+        separately so the LLM knows which to use for facts vs. tone/approach.
+
         Args:
             documents: List of relevant documents
-            
+
         Returns:
             Formatted context string
         """
         if not documents:
             return "No relevant information found in the knowledge base."
-        
+
         context_parts = []
         for i, doc in enumerate(documents, 1):
-            source = doc.metadata.get('source', 'Unknown source')
-            page = doc.metadata.get('page', 'Unknown page')
-            context_parts.append(f"[Source {i}: {os.path.basename(source)}, Page {page}]\n{doc.page_content}\n")
-        
+            source_type = doc.metadata.get('type', 'document')
+            if source_type == 'conversation':
+                context_parts.append(
+                    f"[Conversation Example {i} — Mental Health Dataset]\n"
+                    f"{doc.page_content}\n"
+                )
+            else:
+                source = doc.metadata.get('source', 'Unknown source')
+                page = doc.metadata.get('page', 'Unknown page')
+                context_parts.append(
+                    f"[Clinical Guideline {i} — {os.path.basename(source)}, Page {page}]\n"
+                    f"{doc.page_content}\n"
+                )
+
         return "\n".join(context_parts)
     
-    def generate_response_with_groq(self, query: str, context: str, language: str = 'English') -> str:
+    def generate_response_with_groq(self, query: str, context: str, language: str = "English") -> str:
         """
         Generate a response using Groq LLM based on the query and retrieved context.
-
-        Args:
-            query: User's question
-            context: Retrieved context from documents
-            language: Language to respond in
-
-        Returns:
-            Generated response from Groq
         """
+
         if not self.groq_client:
-            return "⚠️ Groq API client is not initialized. Please check your API key configuration or contact the administrator."
-
-        lang_instruction = f"IMPORTANT: You must respond ENTIRELY in {language}. Even if your internal reasoning is in English, your final reply must be in {language} only."
-
-        if context == "No relevant information found in the knowledge base.":
-            prompt = f"""You are a supportive mental health companion. A user asked: "{query}"
-
-Unfortunately, I couldn't find relevant information in the uploaded documents to answer this question.
-
-Please provide a brief, empathetic response explaining that you don't have specific information about this topic in the knowledge base, and suggest they:
-1. Rephrase their question
-2. Ask about a different aspect of mental health
-3. Consult with a healthcare professional for medical advice
-
-Keep your response warm, supportive, and concise.
-
-{lang_instruction}"""
-        else:
-            prompt = f"""You are a supportive mental health and well-being AI companion. Your role is to provide helpful, accurate, and empathetic information based on the documents provided.
-
-**Context from documents:**
-{context}
-
-**User's question:**
-{query}
-
-**Instructions:**
-- Answer the user's question based ONLY on the context provided above
-- Be empathetic, supportive, and compassionate in your tone
-- If the context doesn't fully answer the question, acknowledge what information is available
-- Always remind users that this is informational and they should consult healthcare professionals for medical advice
-- Keep your response clear, concise, and helpful
-- Use markdown formatting for better readability
-- {lang_instruction}
-
-**Your response:**"""
+            return "⚠️ Groq API client is not initialized. Please check your API configuration."
 
         try:
+
+            # System prompt controlling behavior
+            system_prompt = f"""
+    You are a calm, empathetic mental health support companion.
+
+    Your role is to respond like a supportive counselor who listens carefully,
+    acknowledges emotions, and offers practical guidance when appropriate.
+
+    Conversation principles:
+    • Respond naturally and conversationally.
+    • Be warm, respectful, and non-judgmental.
+    • Focus on the user's message and respond specifically to it.
+    • Avoid generic filler phrases and avoid sounding robotic.
+
+    Response structure:
+    1. Acknowledge what the user shared
+    2. Normalize emotions when appropriate
+    3. Offer practical suggestions if helpful
+    4. Ask one thoughtful follow-up question to continue the conversation
+
+    Safety rules:
+    • Never diagnose mental health conditions.
+    • Never cite documents, guidelines, or sources.
+    • If the user mentions suicidal thoughts or self-harm:
+    - respond with compassion
+    - encourage contacting a trusted person or mental health professional
+    - provide crisis support information:
+        988 Suicide & Crisis Lifeline (call or text)
+        or text HELLO to 741741
+
+    Context usage:
+    If background reference material is provided, use it only as internal guidance.
+    Do NOT mention or cite the source.
+
+    Language rule:
+    Respond entirely in {language}.
+    """
+
+            # Construct conversation messages
+            messages = [{"role": "system", "content": system_prompt}]
+
+            # Add recent chat history for context awareness
+            for user_msg, assistant_msg in self.chat_history[-6:]:
+                messages.append({"role": "user", "content": user_msg})
+                messages.append({"role": "assistant", "content": assistant_msg})
+
+            # Attach context if available
+            if context and context != "No relevant information found in the knowledge base.":
+                user_prompt = f"""
+    Background reference (internal only):
+    {context}
+
+    User message:
+    {query}
+    """
+            else:
+                user_prompt = query
+
+            messages.append({"role": "user", "content": user_prompt})
+
+            # Call Groq
             chat_completion = self.groq_client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "system",
-                        "content": f"You are a compassionate mental health companion providing information based on medical documents. Always be supportive, accurate, and remind users to seek professional help when needed. You must respond in {language} only."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
+                messages=messages,
                 model=config.GROQ_MODEL,
-                temperature=config.GROQ_TEMPERATURE,
-                max_tokens=config.GROQ_MAX_TOKENS,
+                temperature=0.7,
+                max_tokens=1200  # higher limit so responses are not truncated
             )
 
             return chat_completion.choices[0].message.content
 
         except Exception as e:
-            return f"❌ Error generating response: {str(e)}\n\nPlease check your API key or try again later."
-
+            return f"❌ Error generating response: {str(e)}"
     def chat(self, user_message: str, language: str = 'English') -> Tuple[str, List[Document], Dict]:
         """
         Main chat function with emotion detection.
@@ -238,69 +259,92 @@ Keep your response warm, supportive, and concise.
         
         return response, relevant_docs, emotion_data
     
-    def generate_emotion_aware_response(self, query: str, context: str, emotion: Dict, language: str = 'English') -> str:
-        """Generate response tailored to detected emotion"""
+    def generate_emotion_aware_response(self, query: str, context: str, emotion: Dict, language: str = "English") -> str:
+        """
+        Generate response tailored to detected emotion.
+        """
+
         if not self.groq_client:
-            return "⚠️ Groq API client is not initialized. Please check your API key configuration."
-
-        emotion_guidance = {
-            'sadness': "The user is experiencing sadness. Be extra compassionate, validating, and gentle.",
-            'anxiety': "The user is feeling anxious. Provide reassurance and concrete coping strategies.",
-            'stress': "The user is stressed. Offer practical stress management techniques.",
-            'anger': "The user is feeling anger. Validate their feelings and help them process healthily.",
-            'loneliness': "The user feels lonely. Express warmth and connection.",
-            'positive': "The user is in a positive state. Reinforce their wellbeing.",
-            'neutral': "Respond with supportive, informative guidance."
-        }
-
-        primary_emotion = emotion.get('primary_emotion', 'neutral')
-        confidence = emotion.get('confidence', 0.0)
-        intensity = emotion.get('intensity', 'medium')
-        emotion_context = emotion_guidance.get(primary_emotion, emotion_guidance['neutral'])
-
-        if intensity == 'high':
-            intensity_note = "The user's emotional state appears intense. Be especially supportive."
-        else:
-            intensity_note = ""
-
-        lang_instruction = f"IMPORTANT: Respond ENTIRELY in {language}. Your full reply must be written in {language} only."
-
-        if context == "No relevant information found in the knowledge base.":
-            prompt = f"""You are a supportive mental health companion.
-**Detected Emotion:** {primary_emotion} (confidence: {confidence:.0%}, intensity: {intensity})
-**Guidance:** {emotion_context}
-
-A user said: "{query}"
-
-Provide a brief, empathetic response acknowledging their emotional state.
-{lang_instruction}"""
-        else:
-            prompt = f"""You are a supportive mental health companion.
-**Detected Emotion:** {primary_emotion} (confidence: {confidence:.0%}, intensity: {intensity})
-**Guidance:** {emotion_context}
-
-**Context from documents:**
-{context}
-
-**User's message:**
-{query}
-
-Answer based on the context, adjusted for their emotional state of {primary_emotion}.
-{lang_instruction}"""
+            return "⚠️ Groq API client is not initialized. Please check API configuration."
 
         try:
+
+            # Extract emotion signals
+            primary_emotion = emotion.get("primary_emotion", "neutral")
+            intensity = emotion.get("intensity", "medium")
+            confidence = emotion.get("confidence", 0.0)
+
+            emotion_guidance = {
+                "sadness": "Respond with compassion and emotional validation.",
+                "anxiety": "Provide reassurance and calming strategies.",
+                "stress": "Offer practical stress-management suggestions.",
+                "anger": "Validate feelings and guide toward healthy emotional processing.",
+                "loneliness": "Express warmth and encourage connection.",
+                "positive": "Reinforce positive emotions and wellbeing.",
+                "neutral": "Respond supportively and explore the user's thoughts."
+            }
+
+            emotion_instruction = emotion_guidance.get(primary_emotion, emotion_guidance["neutral"])
+
+            # Stronger emphasis if emotion intensity is high
+            if intensity == "high":
+                emotion_instruction += " The emotional intensity appears high, so respond with extra care and patience."
+
+            # System prompt controlling assistant behavior
+            system_prompt = f"""You are a warm, knowledgeable mental health companion — like a trusted friend who genuinely listens and knows a lot about mental well-being.
+
+Your voice: conversational, grounded, and human. You sound like a real person, not a chatbot running a script. No bullet-pointed lists, no rigid templates, no formulaic structure. Each reply flows naturally from what the person just said.
+
+How to respond:
+- Read what the person actually wrote and respond to that specifically. Never give a generic reply.
+- Draw on real mental health knowledge — breathing techniques, CBT strategies, mindfulness, sleep hygiene, journaling, grounding exercises, social connection — and weave them naturally into your response when they genuinely fit. Present advice as natural conversation ("something that tends to help with this is..."), never as a lecture.
+- Vary your length. A brief message usually deserves a brief, warm reply. Something heavy deserves more space — but stay focused, not rambling.
+- Ask a follow-up question only when it genuinely deepens the conversation. Avoid tacking one on every single reply just to fill space.
+- Never start with hollow openers like "I understand", "That sounds tough", "Of course", or "I'm here for you". Get straight to a real, specific response.
+
+Emotional context (keep this internal — do not name or describe the detection to the user):
+The user appears to be feeling {primary_emotion} (intensity: {intensity}).
+{emotion_instruction}
+
+Background knowledge (keep this internal — use it to ground your advice, do not cite or mention sources):
+The background reference material provided contains clinical guidelines and real counselling examples. Use any relevant insights naturally as part of your advice, expressed in plain conversational language. This is what separates a grounded, helpful response from a vague one.
+
+Hard limits:
+- Never diagnose or suggest a specific condition.
+- If the person mentions suicidal thoughts or self-harm: respond with genuine compassion, affirm their worth, strongly encourage reaching out to someone they trust or a professional, and include: 988 Suicide & Crisis Lifeline (call or text 988), or text HELLO to 741741.
+
+Respond entirely in {language}."""
+
+            messages = [{"role": "system", "content": system_prompt}]
+
+            # Add conversation history
+            for user_msg, assistant_msg in self.chat_history[-6:]:
+                messages.append({"role": "user", "content": user_msg})
+                messages.append({"role": "assistant", "content": assistant_msg})
+
+            # Build user prompt with context
+            if context and context != "No relevant information found in the knowledge base.":
+                user_prompt = (
+                    f"[Background reference — use naturally, do not cite]\n"
+                    f"{context}\n\n"
+                    f"[User message]\n{query}"
+                )
+            else:
+                user_prompt = query
+
+            messages.append({"role": "user", "content": user_prompt})
+
             chat_completion = self.groq_client.chat.completions.create(
-                messages=[
-                    {"role": "system", "content": f"You are a compassionate mental health companion. The user is experiencing {primary_emotion}. You must respond in {language} only."},
-                    {"role": "user", "content": prompt}
-                ],
+                messages=messages,
                 model=config.GROQ_MODEL,
-                temperature=config.GROQ_TEMPERATURE,
-                max_tokens=config.GROQ_MAX_TOKENS,
+                temperature=0.7,
+                max_tokens=1200
             )
+
             return chat_completion.choices[0].message.content
+
         except Exception as e:
-            return f"❌ Error: {str(e)}"
+            return f"❌ Error generating response: {str(e)}"
     
     def get_emotion_history(self, limit: int = 10) -> List[Dict]:
         """Get recent emotion history"""
@@ -417,18 +461,33 @@ Respond in {language}."""
         messages = [
             {
                 "role": "system",
-                "content": f"""You are a compassionate mental health support companion. The user completed a {type_label} screening with {score_context}.
+                "content": f"""You are a calm, empathetic mental health companion supporting a user who just completed a {type_label} screening with {score_context}.
 
-Your role:
-- Provide warm emotional support and active listening
-- Ask one open, reflective question per response about their feelings, triggers, or recent experiences
-- Suggest brief coping strategies when the user seems ready
-- Use empathetic, non-judgmental language
-- NEVER diagnose or prescribe
-- Gently encourage professional help if symptoms seem severe or persistent
-- If the user expresses thoughts of self-harm or suicide, immediately provide: 988 Suicide & Crisis Lifeline (call/text), or text HELLO to 741741
+Follow these guidelines in every reply:
 
-Respond in {language}. Keep responses warm but concise (under 120 words)."""
+Response length: Match the message. A short question needs 3–4 sentences. A deeper emotional concern may need 5–7 sentences. No one-liners, and no long unbroken paragraphs.
+
+Structure (follow this order each time):
+  1. Acknowledge — recognize what they shared or how they might be feeling after completing the screening, in specific terms
+  2. Normalize — gently affirm that their reaction or experience makes sense, where it fits naturally
+  3. Guidance — offer one or two simple, practical coping strategies relevant to what they're going through (e.g. a breathing exercise, journaling, gentle movement, a sleep tip). One clear sentence per tip — no lengthy instructions.
+  4. Follow-up — close with ONE thoughtful question that encourages them to open up further
+
+Tone:
+  - Warm, human, and conversational — like a trusted friend who understands mental health
+  - Vary your opening naturally; never use filler openers like "I'm here for you", "That sounds tough", "Of course", or "I understand how you feel"
+  - No clinical terms, jargon, or textbook language
+
+Stay focused:
+  - Respond specifically to what the user said — no generic replies
+  - Skip coping suggestions if the user is asking a simple factual question; just address it warmly
+
+Limits:
+  - Never diagnose, label conditions, or suggest a specific disorder
+  - If symptoms seem severe or persistent, gently mention that talking to a professional can help — without alarming them
+  - If self-harm or suicidal thoughts are mentioned: respond with compassion, affirm their worth, and gently share: 988 Suicide & Crisis Lifeline (call or text), or text HELLO to 741741
+
+Respond in {language}."""
             }
         ]
 
@@ -443,7 +502,7 @@ Respond in {language}. Keep responses warm but concise (under 120 words)."""
                 messages=messages,
                 model=config.GROQ_MODEL,
                 temperature=0.8,
-                max_tokens=300,
+                max_tokens=500,
             )
             return completion.choices[0].message.content
         except Exception as e:

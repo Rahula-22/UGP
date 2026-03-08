@@ -195,7 +195,7 @@ if prompt := st.chat_input("Ask me anything about mental health and well-being..
         # Generate response
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                response, sources = st.session_state.chatbot.chat(prompt)
+                response, sources, _ = st.session_state.chatbot.chat(prompt)
                 st.markdown(response)
                 
                 # Show sources

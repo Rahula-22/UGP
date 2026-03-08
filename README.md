@@ -53,7 +53,7 @@ To run the project locally, follow these steps:
 
 5. **Run the backend server**
    ```bash
-   python api.py
+   uvicorn api:app --reload
    ```
 
 6. **Run the frontend development server**

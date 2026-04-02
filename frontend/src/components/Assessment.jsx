@@ -149,15 +149,19 @@ const COPING_CONTENT = {
     techniques: [
       { icon: '🚶', name: 'Behavioural Activation',
         desc: 'Depression reduces motivation — but acting first creates mood improvement, not vice versa.',
+        meta: { time: '10–30 min', goal: 'Build momentum', when: 'Low mood, low energy' },
         steps: ['List 3 small activities you used to enjoy.', 'Schedule one today, even for 10 minutes.', 'Do it regardless of how you feel — motivation follows action.', 'Notice how you feel before and after.'] },
       { icon: '📓', name: 'Gratitude Journaling',
         desc: 'Intentionally focusing on small positives gradually retrains a depressed mind.',
+        meta: { time: '3–5 min', goal: 'Shift attention', when: 'End of day' },
         steps: ['Each evening, write 3 specific things that went okay today.', 'They can be tiny (a hot drink, a moment of quiet).', 'Try for 7 consecutive days and notice any shift.'] },
       { icon: '☀️', name: 'Morning Sunlight',
         desc: 'Light exposure within an hour of waking boosts serotonin and regulates your body clock.',
+        meta: { time: '10–15 min', goal: 'Regulate rhythm', when: 'Morning' },
         steps: ['Go outside within 1 hour of waking.', 'Spend 10–15 minutes in natural daylight.', 'Even on cloudy days, outdoor light is far brighter than indoors.'] },
       { icon: '🤝', name: 'Social Connection',
         desc: 'Isolation deepens depression. Even brief contact helps.',
+        meta: { time: '2–15 min', goal: 'Reduce isolation', when: 'Anytime' },
         steps: ['Send one message to a friend or family member today.', "It doesn't need to be deep — \"thinking of you\" counts.", 'If possible, arrange a brief in-person meeting this week.'] },
     ],
   },
@@ -166,15 +170,19 @@ const COPING_CONTENT = {
     techniques: [
       { icon: '🌬️', name: '4-7-8 Breathing',
         desc: 'Activates the parasympathetic nervous system and reduces anxiety within minutes.',
+        meta: { time: '2–4 min', goal: 'Calm the body', when: 'Panic, racing thoughts' },
         steps: ['Breathe in through your nose for 4 counts.', 'Hold for 7 counts.', 'Exhale slowly through your mouth for 8 counts.', 'Repeat 4–6 cycles whenever anxiety spikes.'] },
       { icon: '🌱', name: '5-4-3-2-1 Grounding',
         desc: 'Anchors you in the present moment and interrupts the anxiety spiral.',
+        meta: { time: '2–5 min', goal: 'Re-ground attention', when: 'Spiralling worry' },
         steps: ['Name 5 things you can see.', 'Name 4 things you can physically touch or feel.', 'Name 3 things you can hear.', 'Name 2 things you can smell.', 'Name 1 thing you can taste.'] },
       { icon: '📋', name: 'Worry Postponement',
         desc: 'Contains worry to a specific time, freeing the rest of your day.',
+        meta: { time: '15 min/day', goal: 'Contain worry', when: 'Chronic worrying' },
         steps: ["When a worry arrives, jot it down briefly on a notepad.", "Tell yourself: \"I'll deal with this at my worry time.\"", 'Schedule 15 minutes daily as "worry time" (e.g., 6 PM).', 'Work through your list then — and not before.'] },
       { icon: '💪', name: 'Progressive Muscle Relaxation',
         desc: 'Releases physical tension that builds up silently during ongoing anxiety.',
+        meta: { time: '8–12 min', goal: 'Release tension', when: 'Body tension, restlessness' },
         steps: ['Sit comfortably. Start at your feet.', 'Tense each muscle group firmly for 5 seconds.', 'Release and notice the wave of relaxation for 10 seconds.', 'Work upward: feet → calves → thighs → abdomen → shoulders → face.'] },
     ],
   },
@@ -183,15 +191,19 @@ const COPING_CONTENT = {
     techniques: [
       { icon: '📦', name: 'Box Breathing',
         desc: 'A rapid nervous-system reset used by emergency responders.',
+        meta: { time: '2 min', goal: 'Reset', when: 'Before stressful moments' },
         steps: ['Breathe in for 4 counts.', 'Hold for 4 counts.', 'Breathe out for 4 counts.', 'Hold for 4 counts.', 'Repeat for 2 minutes. Use before stressful moments.'] },
       { icon: '📅', name: 'Priority Matrix',
         desc: 'Clears overwhelm by showing what actually needs your attention today.',
+        meta: { time: '10 min', goal: 'Reduce overwhelm', when: 'Too many tasks' },
         steps: ['List all current tasks on paper.', 'Sort: Urgent & Important → do now; Important not urgent → schedule; Urgent not important → delegate; Neither → drop.', 'Commit to only the top 3 tasks today.'] },
       { icon: '🏃', name: 'Movement Break',
         desc: 'Physical activity metabolises stress hormones within 20 minutes.',
+        meta: { time: '10–20 min', goal: 'Discharge stress', when: 'After conflict / long focus' },
         steps: ['When stress peaks, stand up immediately.', 'Take a 10-minute walk, outside if possible.', 'Focus on your surroundings rather than your thoughts.'] },
       { icon: '🛡️', name: 'Setting Limits',
         desc: 'Chronic stress often comes from over-commitment and difficulty saying no.',
+        meta: { time: '5–10 min', goal: 'Protect energy', when: 'Over-committed' },
         steps: ['Identify one thing you are doing out of obligation rather than choice.', 'Practice: "I appreciate you asking, but I can\'t take that on right now."', 'Protect three non-negotiables daily: sleep, meals, and at least 20 min of rest.'] },
     ],
   },
@@ -770,8 +782,8 @@ function Assessment({ sessionToken, onBack }) {
             <Heart className="w-4 h-4 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-gray-900 leading-none mb-0.5">Personalised Support</p>
-            <p className="text-xs text-gray-400">{activeTool.title} · {getResultSeverity().replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</p>
+            <p className="text-base sm:text-lg font-bold text-gray-900 leading-none mb-0.5">Personalised Support</p>
+            <p className="text-sm text-gray-400">{activeTool.title} · {getResultSeverity().replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</p>
           </div>
         </div>
 
@@ -794,7 +806,7 @@ function Assessment({ sessionToken, onBack }) {
           </div>
         </div>
 
-        <div className="max-w-2xl mx-auto px-4 py-6">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
 
           {/* ── SUMMARY TAB ─────────────────────────────────────────────── */}
           {supportTab === 'summary' && (
@@ -802,8 +814,8 @@ function Assessment({ sessionToken, onBack }) {
               {highRisk && crisisBlock}
 
               {/* AI Interpretation */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 uppercase tracking-wide">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-7">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2 uppercase tracking-wide">
                   <Sparkles className="w-4 h-4 text-indigo-400" /> Understanding Your Result
                 </h3>
                 {summaryLoading ? (
@@ -812,40 +824,77 @@ function Assessment({ sessionToken, onBack }) {
                     <div className="h-3 bg-gray-100 rounded-full animate-pulse w-5/6" />
                     <div className="h-3 bg-gray-100 rounded-full animate-pulse w-4/5" />
                     <div className="h-3 bg-gray-100 rounded-full animate-pulse w-3/4" />
-                    <p className="text-xs text-gray-400 mt-3 text-center">Generating personalised interpretation…</p>
+                    <p className="text-sm text-gray-400 mt-3 text-center">Generating personalised interpretation…</p>
                   </div>
                 ) : (
                   <div>
                     <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{aiSummary}</p>
-                    <p className="text-xs text-gray-400 mt-4 pt-3 border-t border-gray-100 italic">Screening result only — not a clinical diagnosis. Always consult a qualified professional.</p>
+                    <p className="text-sm text-gray-400 mt-4 pt-3 border-t border-gray-100 italic">Screening result only — not a clinical diagnosis. Always consult a qualified professional.</p>
                   </div>
                 )}
               </div>
 
               {/* Coping Techniques */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="text-sm font-bold text-gray-900 mb-0.5 uppercase tracking-wide">{coping.headline}</h3>
-                <p className="text-xs text-gray-400 mb-4">Evidence-based techniques for your primary concern</p>
-                <div className="space-y-2">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-7">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-0.5 uppercase tracking-wide">{coping.headline}</h3>
+                <p className="text-sm text-gray-400 mb-4">Evidence-based techniques for your primary concern</p>
+                <div className="grid gap-3 sm:grid-cols-2">
                   {coping.techniques.map((t, i) => (
-                    <div key={i} className="border border-gray-100 rounded-xl overflow-hidden">
+                    <div
+                      key={i}
+                      className={`group rounded-2xl border bg-white transition-all ${
+                        expandedTechnique === i
+                          ? 'border-indigo-200 shadow-sm'
+                          : 'border-gray-100 hover:border-indigo-150 hover:shadow-sm'
+                      }`}
+                    >
                       <button onClick={() => setExpandedTechnique(expandedTechnique === i ? null : i)}
-                        className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{t.icon}</span>
-                          <div>
-                            <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
-                            <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{t.desc}</p>
+                        className="w-full p-5 text-left">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 min-w-0">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-2xl ring-1 ring-indigo-100 flex-shrink-0">
+                              {t.icon}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-gray-900 text-base leading-tight">{t.name}</p>
+                              <p className="text-sm text-gray-500 mt-1 leading-relaxed">{t.desc}</p>
+
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {t.meta?.time && (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700 ring-1 ring-gray-200">
+                                    <Clock className="w-3.5 h-3.5 text-gray-400" />
+                                    {t.meta.time}
+                                  </span>
+                                )}
+                                {t.meta?.goal && (
+                                  <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
+                                    {t.meta.goal}
+                                  </span>
+                                )}
+                                {t.meta?.when && (
+                                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                                    Best when: {t.meta.when}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
+
+                          <ChevronRight className={`w-4 h-4 text-gray-300 transition-transform flex-shrink-0 mt-1 ${
+                            expandedTechnique === i ? 'rotate-90 text-indigo-400' : 'group-hover:text-gray-500'
+                          }`} />
                         </div>
-                        <ChevronRight className={`w-4 h-4 text-gray-300 transition-transform flex-shrink-0 ml-2 ${expandedTechnique === i ? 'rotate-90 text-indigo-400' : ''}`} />
                       </button>
                       {expandedTechnique === i && (
-                        <div className="px-4 pb-4 bg-indigo-50/60 border-t border-indigo-100">
+                        <div className="px-4 pb-4 bg-indigo-50/60 border-t border-indigo-100 rounded-b-2xl">
+                          <div className="pt-3 flex items-center justify-between gap-3">
+                            <p className="text-sm font-bold text-indigo-900 uppercase tracking-wide">How to do it</p>
+                            <span className="text-sm text-indigo-700 font-semibold">Tap to collapse</span>
+                          </div>
                           <ol className="space-y-2 mt-3">
                             {t.steps.map((step, si) => (
                               <li key={si} className="flex gap-3 text-sm text-gray-700">
-                                <span className="w-5 h-5 bg-indigo-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">{si + 1}</span>
+                                <span className="w-5 h-5 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{si + 1}</span>
                                 <span className="leading-relaxed">{step}</span>
                               </li>
                             ))}
@@ -884,15 +933,15 @@ function Assessment({ sessionToken, onBack }) {
               </div>
 
               {/* Lifestyle Tips */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Lifestyle Recommendations</h3>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-7">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-4 uppercase tracking-wide">Lifestyle Recommendations</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {LIFESTYLE_TIPS.map((tip, i) => (
-                    <div key={i} className="flex gap-3 p-3.5 bg-gray-50 rounded-xl hover:bg-indigo-50/50 transition-colors">
+                    <div key={i} className="flex gap-3 p-4 bg-gray-50 rounded-xl hover:bg-indigo-50/50 transition-colors">
                       <span className="text-2xl flex-shrink-0">{tip.icon}</span>
                       <div>
-                        <p className="text-sm font-semibold text-gray-800">{tip.title}</p>
-                        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{tip.tip}</p>
+                        <p className="text-base font-semibold text-gray-800">{tip.title}</p>
+                        <p className="text-sm text-gray-500 mt-1 leading-relaxed">{tip.tip}</p>
                       </div>
                     </div>
                   ))}

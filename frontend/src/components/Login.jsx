@@ -4,8 +4,8 @@ import { Brain, Lock, User, Mail, AlertCircle } from 'lucide-react';
 
 const API_BASE = 'http://localhost:8000';
 
-function Login({ onLoginSuccess }) {
-  const [isRegister, setIsRegister] = useState(false);
+function Login({ onLoginSuccess, defaultIsRegister = false, onBack }) {
+  const [isRegister, setIsRegister] = useState(Boolean(defaultIsRegister));
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -77,6 +77,18 @@ function Login({ onLoginSuccess }) {
 
         {/* Login/Register Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
+          {typeof onBack === 'function' && (
+            <button
+              type="button"
+              onClick={() => {
+                setError('');
+                onBack();
+              }}
+              className="mb-4 text-sm font-semibold text-gray-600 hover:text-gray-900"
+            >
+              ← Back
+            </button>
+          )}
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             {isRegister ? 'Create Account' : 'Welcome Back'}
           </h2>

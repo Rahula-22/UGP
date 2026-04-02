@@ -5,6 +5,7 @@ import {
   Loader2, X, Menu
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import Landing from './components/Landing';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Chat from './components/Chat';
@@ -21,7 +22,8 @@ function App() {
   const [notification, setNotification] = useState(null);
   const [user, setUser] = useState(null);
   const [sessionToken, setSessionToken] = useState(null);
-  const [currentView, setCurrentView] = useState('login');
+  const [currentView, setCurrentView] = useState('landing');
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
   const messagesEndRef = useRef(null);
 
   // Fetch status on mount
@@ -97,15 +99,36 @@ function App() {
     localStorage.removeItem('user');
     setUser(null);
     setSessionToken(null);
-    setCurrentView('login');
+    setAuthMode('login');
+    setCurrentView('landing');
   };
 
   const handleNavigate = (view) => {
     setCurrentView(view);
   };
 
+  const goToLogin = () => {
+    setAuthMode('login');
+    setCurrentView('login');
+  };
+
+  const goToRegister = () => {
+    setAuthMode('register');
+    setCurrentView('login');
+  };
+
+  if (currentView === 'landing') {
+    return <Landing onSignIn={goToLogin} onSignUp={goToRegister} />;
+  }
+
   if (currentView === 'login') {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <Login
+        onLoginSuccess={handleLoginSuccess}
+        defaultIsRegister={authMode === 'register'}
+        onBack={() => setCurrentView('landing')}
+      />
+    );
   }
 
   if (currentView === 'dashboard') {

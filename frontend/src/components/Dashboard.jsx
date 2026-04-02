@@ -1,141 +1,549 @@
-import React from 'react';
-import { MessageCircle, ClipboardList, LogOut, Heart } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import {
+  Brain,
+  LayoutDashboard,
+  BookOpen,
+  UserCircle2,
+  LogOut,
+  MessageCircle,
+  ClipboardList,
+  Sparkles,
+  Wind,
+  Headphones,
+  PhoneCall,
+  Newspaper,
+  ChevronRight,
+  HeartPulse,
+  ShieldCheck,
+  TrendingUp,
+  CalendarDays,
+} from 'lucide-react';
 
 function Dashboard({ user, onNavigate, onLogout }) {
+  const [activeNav, setActiveNav] = useState('dashboard'); // dashboard | resources | profile
+
+  const greeting = useMemo(() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 18) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
+
+  const todayLabel = useMemo(() => {
+    try {
+      return new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date());
+    } catch {
+      return new Date().toDateString();
+    }
+  }, []);
+
+  const quote = useMemo(() => {
+    const quotes = [
+      {
+        text: 'You don’t have to control your thoughts. You just have to stop letting them control you.',
+        author: 'Dan Millman',
+      },
+      {
+        text: 'Small steps still move you forward. Be gentle with yourself today.',
+        author: 'Serenely',
+      },
+      {
+        text: 'Breathe. This moment is allowed to be imperfect.',
+        author: 'Serenely',
+      },
+      {
+        text: 'Your feelings are valid — and they can change. One kind action at a time.',
+        author: 'Serenely',
+      },
+    ];
+    const idx = Math.abs(Math.floor(Date.now() / (1000 * 60 * 60 * 24))) % quotes.length;
+    return quotes[idx];
+  }, []);
+
+  const resources = useMemo(
+    () => [
+      {
+        title: 'Breathing Exercise',
+        desc: 'A quick 60‑second reset to calm your body.',
+        icon: Wind,
+        accent: 'from-sky-500 to-violet-600',
+        onClick: () => {},
+      },
+      {
+        title: 'Meditation',
+        desc: 'Short sessions to ease stress and improve sleep.',
+        icon: Headphones,
+        accent: 'from-emerald-500 to-teal-600',
+        onClick: () => {},
+      },
+      {
+        title: 'Emergency Helpline',
+        desc: 'If you’re in crisis, get help immediately.',
+        icon: PhoneCall,
+        accent: 'from-rose-500 to-orange-500',
+        onClick: () => {},
+      },
+      {
+        title: 'Read Articles',
+        desc: 'Practical guides for anxiety, sleep, and habits.',
+        icon: Newspaper,
+        accent: 'from-violet-500 to-fuchsia-600',
+        onClick: () => {},
+      },
+    ],
+    []
+  );
+
+  const overviewStats = useMemo(
+    () => [
+      {
+        label: 'Today',
+        value: todayLabel,
+        icon: CalendarDays,
+        tone: 'bg-sky-50 text-sky-900 ring-sky-200/70',
+      },
+      {
+        label: 'Wellness focus',
+        value: 'Small steps',
+        icon: TrendingUp,
+        tone: 'bg-violet-50 text-violet-900 ring-violet-200/70',
+      },
+      {
+        label: 'Privacy',
+        value: 'Secure session',
+        icon: ShieldCheck,
+        tone: 'bg-emerald-50 text-emerald-900 ring-emerald-200/70',
+      },
+    ],
+    [todayLabel]
+  );
+
+  const NavButton = ({ id, icon: Icon, label }) => {
+    const active = activeNav === id;
+    return (
+      <button
+        type="button"
+        onClick={() => setActiveNav(id)}
+        className={`inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold transition ${
+          active ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:bg-white/70 hover:text-gray-900'
+        }`}
+      >
+        <Icon className="h-4 w-4" />
+        <span className="hidden sm:inline">{label}</span>
+      </button>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Heart className="w-6 h-6 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50">
+      {/* Top navigation */}
+      <div className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/70 backdrop-blur">
+        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-violet-600 text-white shadow">
+                <Brain className="h-6 w-6" />
+              </div>
+              <div className="leading-tight">
+                <div className="text-sm font-extrabold tracking-tight text-gray-900">Serenely</div>
+                <div className="text-xs text-gray-500">Personal wellness dashboard</div>
+              </div>
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">Mental Health Companion</h1>
-              <p className="text-xs text-gray-500">Your Personal Wellness Dashboard</p>
+
+            <div className="hidden items-center gap-2 rounded-3xl bg-gradient-to-r from-sky-100/70 via-white to-emerald-100/60 p-1 md:flex">
+              <NavButton id="dashboard" icon={LayoutDashboard} label="Dashboard" />
+              <NavButton id="resources" icon={BookOpen} label="Resources" />
+              <NavButton id="profile" icon={UserCircle2} label="Profile" />
+              <button
+                type="button"
+                onClick={onLogout}
+                className="inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-white/70 hover:text-red-700"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
+
+            {/* Right side user chip */}
+            <div className="flex items-center gap-3">
+              <div className="hidden text-right sm:block">
+                <div className="text-sm font-semibold text-gray-900">{user?.username || 'User'}</div>
+                <div className="text-xs text-gray-500">{user?.email || '—'}</div>
+              </div>
+              <div className="h-10 w-10 rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/70 flex items-center justify-center text-gray-700">
+                <UserCircle2 className="h-6 w-6" />
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">{user.username}</p>
-              <p className="text-xs text-gray-500">{user.email}</p>
-            </div>
+
+          {/* Mobile nav */}
+          <div className="mt-3 flex items-center justify-between gap-2 rounded-3xl bg-white/60 p-1 shadow-sm ring-1 ring-gray-200/60 md:hidden">
+            <NavButton id="dashboard" icon={LayoutDashboard} label="Dashboard" />
+            <NavButton id="resources" icon={BookOpen} label="Resources" />
+            <NavButton id="profile" icon={UserCircle2} label="Profile" />
             <button
+              type="button"
               onClick={onLogout}
-              className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-white hover:text-red-700"
               title="Logout"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="h-4 w-4" />
+              <span className="sr-only">Logout</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        {/* Welcome Section */}
-        <div className="mb-12 text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome back, {user.username}! 👋
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            How can we support your mental wellness journey today?
-          </p>
-        </div>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+        {/* Welcome section */}
+        <div className="rounded-3xl border border-gray-200/70 bg-white/70 p-6 shadow-sm backdrop-blur sm:p-8">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/70 px-3 py-1 text-xs font-semibold text-sky-700">
+                <Sparkles className="h-4 w-4" />
+                Today’s check-in • {todayLabel}
+              </div>
+              <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">
+                {greeting}, {user?.username || 'there'}.
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">
+                We’re here to support your mental well‑being. Take a breath, choose a tool, and start where you are.
+              </p>
 
-        {/* Action Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* Ask a Question Card */}
-          <button
-            onClick={() => onNavigate('chat')}
-            className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 text-left border-2 border-transparent hover:border-indigo-500"
-          >
-            <div className="flex items-start justify-between mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <MessageCircle className="w-8 h-8 text-white" />
-              </div>
-              <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                <span className="text-indigo-600 text-xl">→</span>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {overviewStats.map((s) => {
+                  const Icon = s.icon;
+                  return (
+                    <div
+                      key={s.label}
+                      className={`rounded-2xl px-4 py-3 ring-1 ${s.tone}`}
+                    >
+                      <div className="flex items-center gap-2 text-xs font-semibold opacity-80">
+                        <Icon className="h-4 w-4" />
+                        {s.label}
+                      </div>
+                      <div className="mt-1 text-sm font-extrabold tracking-tight">{s.value}</div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">
-              Ask a Question
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Get instant, AI-powered answers to your mental health questions based on professional resources.
-            </p>
-            <div className="flex items-center gap-2 text-indigo-600 font-medium">
-              <span>Start conversation</span>
-              <span className="group-hover:translate-x-1 transition-transform">→</span>
-            </div>
-          </button>
 
-          {/* Mental Health Assessment Card */}
-          <button
-            onClick={() => onNavigate('assessment')}
-            className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 text-left border-2 border-transparent hover:border-purple-500"
-          >
-            <div className="flex items-start justify-between mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <ClipboardList className="w-8 h-8 text-white" />
+            <div className="rounded-3xl bg-gradient-to-br from-sky-500/10 via-violet-600/10 to-emerald-500/10 p-5 ring-1 ring-gray-200/60 md:w-[22rem]">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-violet-600 text-white shadow">
+                  <HeartPulse className="h-6 w-6" />
+                </div>
+                <div>
+                  <div className="text-sm font-extrabold text-gray-900">Your gentle reminder</div>
+                  <div className="mt-1 text-sm text-gray-600">Progress counts, even when it’s quiet.</div>
+                </div>
               </div>
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                <span className="text-purple-600 text-xl">→</span>
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">
-              Check My Mental Health Status
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Take a confidential assessment to understand your current mental health status and get personalized insights.
-            </p>
-            <div className="flex items-center gap-2 text-purple-600 font-medium">
-              <span>Begin assessment</span>
-              <span className="group-hover:translate-x-1 transition-transform">→</span>
-            </div>
-          </button>
-        </div>
-
-        {/* Privacy Notice */}
-        <div className="mt-12 max-w-2xl mx-auto">
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xl">🔒</span>
-              </div>
-              <div>
-                <h4 className="font-semibold text-blue-900 mb-2">Your Privacy Matters</h4>
-                <p className="text-sm text-blue-800 leading-relaxed">
-                  All conversations and assessments are completely private and encrypted. Your data is never shared with third parties. 
-                  This tool provides information and support, but is not a substitute for professional medical advice.
-                </p>
+              <div className="mt-4 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => onNavigate('assessment')}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm ring-1 ring-gray-200/70 hover:bg-gray-50"
+                >
+                  Take a quick assessment <ChevronRight className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('chat')}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:from-sky-600 hover:to-violet-700"
+                >
+                  Talk to your companion <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Emergency Resources */}
-        <div className="mt-8 max-w-2xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xl">🆘</span>
+        {activeNav === 'dashboard' && (
+          <>
+            {/* Main action cards */}
+            <div className="mt-8 grid gap-6 lg:grid-cols-2">
+              <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur transition hover:shadow-lg sm:p-8">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-violet-600 text-white shadow">
+                      <MessageCircle className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <div className="text-base font-extrabold tracking-tight text-gray-900">Ask a Question</div>
+                      <div className="mt-1 text-sm text-gray-600">Talk to our AI and share what you feel.</div>
+                    </div>
+                  </div>
+                  <div className="hidden rounded-2xl bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 ring-1 ring-sky-200 sm:inline-flex">
+                    24/7 support
+                  </div>
+                </div>
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm text-gray-600">
+                    Get grounded guidance, coping strategies, and explanations in simple language.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('chat')}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow hover:from-sky-600 hover:to-violet-700"
+                  >
+                    Start Chat <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-              <div>
-                <h4 className="font-semibold text-red-900 mb-2">In Crisis? Get Help Now</h4>
-                <p className="text-sm text-red-800 mb-3">
-                  If you're experiencing a mental health crisis, please reach out immediately:
-                </p>
-                <ul className="text-sm text-red-800 space-y-1">
-                  <li>• <strong>Call 988</strong> - Suicide & Crisis Lifeline (24/7)</li>
-                  <li>• <strong>Text "HELLO" to 741741</strong> - Crisis Text Line</li>
-                  <li>• <strong>Call 911</strong> - For immediate emergencies</li>
-                </ul>
+
+              <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur transition hover:shadow-lg sm:p-8">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow">
+                      <ClipboardList className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <div className="text-base font-extrabold tracking-tight text-gray-900">Mental Health Assessment</div>
+                      <div className="mt-1 text-sm text-gray-600">Take a quick assessment to check your status.</div>
+                    </div>
+                  </div>
+                  <div className="hidden rounded-2xl bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 ring-1 ring-violet-200 sm:inline-flex">
+                    2–10 min
+                  </div>
+                </div>
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm text-gray-600">
+                    Choose from validated tools and receive a clear, supportive interpretation.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('assessment')}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-5 py-3 text-sm font-semibold text-white shadow hover:from-violet-600 hover:to-fuchsia-700"
+                  >
+                    Start Assessment <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Daily quote */}
+            <div className="mt-8">
+              <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <div className="text-sm font-extrabold text-gray-900">Daily quote</div>
+                    <div className="mt-1 text-sm text-gray-600">A small grounding thought for today.</div>
+                  </div>
+                  <div className="rounded-2xl bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 ring-1 ring-violet-200">
+                    Updated daily
+                  </div>
+                </div>
+
+                <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                  <div className="rounded-3xl bg-gradient-to-br from-violet-600/10 via-white to-sky-500/10 p-6 ring-1 ring-gray-200/60 lg:col-span-2">
+                    <div className="text-base leading-relaxed text-gray-800">“{quote.text}”</div>
+                    <div className="mt-4 text-xs font-semibold text-gray-500">— {quote.author}</div>
+                  </div>
+                  <div className="rounded-3xl bg-emerald-50/60 p-6 ring-1 ring-emerald-200/60">
+                    <div className="text-xs font-semibold text-emerald-800">Tip</div>
+                    <div className="mt-2 text-sm leading-relaxed text-emerald-900">
+                      Try one small action: drink water, step outside, or message someone safe.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick help / resources */}
+            <div className="mt-8">
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <div className="text-lg font-extrabold tracking-tight text-gray-900">Quick help & resources</div>
+                  <div className="mt-1 text-sm text-gray-600">Fast tools you can use right now.</div>
+                </div>
+                <div className="hidden text-sm font-semibold text-gray-500 sm:block">Explore</div>
+              </div>
+
+              <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {resources.map((r) => {
+                  const Icon = r.icon;
+                  return (
+                    <button
+                      key={r.title}
+                      type="button"
+                      onClick={r.onClick}
+                      className="group rounded-3xl border border-gray-200/70 bg-white/80 p-5 text-left shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${r.accent} text-white shadow`}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-gray-300 transition group-hover:translate-x-0.5 group-hover:text-gray-500" />
+                      </div>
+                      <div className="mt-4 text-sm font-extrabold text-gray-900">{r.title}</div>
+                      <div className="mt-1 text-sm leading-relaxed text-gray-600">{r.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6 rounded-3xl border border-rose-200 bg-rose-50/70 p-6 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-500 text-white shadow">
+                    <PhoneCall className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-extrabold text-rose-900">In crisis? Get help now</div>
+                    <div className="mt-2 text-sm leading-relaxed text-rose-800">
+                      If you’re experiencing a mental health emergency, contact local emergency services immediately.
+                      If you’re in the US, call or text <span className="font-extrabold">988</span> for the Suicide &amp; Crisis Lifeline.
+                      Outside the US, consider your country’s national crisis line or emergency number.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Minimal profile card for “real product” feel */}
+            <div className="mt-8 grid gap-6 lg:grid-cols-3">
+              <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8 lg:col-span-2">
+                <div className="text-sm font-extrabold text-gray-900">Privacy & care</div>
+                <div className="mt-2 text-sm leading-relaxed text-gray-600">
+                  Your check-ins are personal. This app provides supportive information and wellness tools — it is not a substitute
+                  for professional medical advice, diagnosis, or treatment.
+                </div>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                  <div className="rounded-2xl bg-sky-50 px-4 py-3 text-sm text-sky-900 ring-1 ring-sky-200/70">
+                    <span className="font-extrabold">Secure sessions</span> and minimal data.
+                  </div>
+                  <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900 ring-1 ring-emerald-200/70">
+                    <span className="font-extrabold">Stigma‑free</span> support, designed to feel calm.
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8">
+                <div className="text-sm font-extrabold text-gray-900">Your profile</div>
+                <div className="mt-4 rounded-3xl bg-gradient-to-br from-sky-500/10 via-white to-violet-600/10 p-5 ring-1 ring-gray-200/60">
+                  <div className="text-xs font-semibold text-gray-500">Signed in as</div>
+                  <div className="mt-2 text-sm font-extrabold text-gray-900">{user?.username || 'User'}</div>
+                  <div className="mt-1 text-sm text-gray-600">{user?.email || '—'}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeNav === 'resources' && (
+          <div className="mt-8">
+            <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="text-lg font-extrabold tracking-tight text-gray-900">Resources</div>
+                  <div className="mt-1 text-sm text-gray-600">Pick something small you can do right now.</div>
+                </div>
+                <div className="rounded-2xl bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200/70">
+                  Calm, quick, repeatable
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {resources.map((r) => {
+                  const Icon = r.icon;
+                  return (
+                    <button
+                      key={r.title}
+                      type="button"
+                      onClick={r.onClick}
+                      className="group rounded-3xl border border-gray-200/70 bg-white/80 p-5 text-left shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${r.accent} text-white shadow`}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-gray-300 transition group-hover:translate-x-0.5 group-hover:text-gray-500" />
+                      </div>
+                      <div className="mt-4 text-sm font-extrabold text-gray-900">{r.title}</div>
+                      <div className="mt-1 text-sm leading-relaxed text-gray-600">{r.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6 rounded-3xl border border-rose-200 bg-rose-50/70 p-6 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-500 text-white shadow">
+                    <PhoneCall className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-extrabold text-rose-900">In crisis? Get help now</div>
+                    <div className="mt-2 text-sm leading-relaxed text-rose-800">
+                      If you’re experiencing a mental health emergency, contact local emergency services immediately.
+                      If you’re in the US, call or text <span className="font-extrabold">988</span>.
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {activeNav === 'profile' && (
+          <div className="mt-8 grid gap-6 lg:grid-cols-3">
+            <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8 lg:col-span-2">
+              <div className="text-lg font-extrabold tracking-tight text-gray-900">Your profile</div>
+              <div className="mt-2 text-sm text-gray-600">Account details and session controls.</div>
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-3xl bg-gradient-to-br from-sky-500/10 via-white to-violet-600/10 p-6 ring-1 ring-gray-200/60">
+                  <div className="text-xs font-semibold text-gray-500">Username</div>
+                  <div className="mt-2 text-sm font-extrabold text-gray-900">{user?.username || 'User'}</div>
+                </div>
+                <div className="rounded-3xl bg-gradient-to-br from-emerald-500/10 via-white to-sky-500/10 p-6 ring-1 ring-gray-200/60">
+                  <div className="text-xs font-semibold text-gray-500">Email</div>
+                  <div className="mt-2 text-sm font-extrabold text-gray-900">{user?.email || '—'}</div>
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-3xl border border-gray-200/70 bg-white/70 p-6 shadow-sm">
+                <div className="text-sm font-extrabold text-gray-900">Safety note</div>
+                <div className="mt-2 text-sm leading-relaxed text-gray-600">
+                  This app is designed for supportive guidance and self-care tools. If you’re worried about your safety,
+                  consider contacting a trusted person or local emergency services.
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8">
+              <div className="text-sm font-extrabold text-gray-900">Session</div>
+              <div className="mt-4 rounded-3xl bg-sky-50/70 p-5 ring-1 ring-sky-200/70">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-violet-600 text-white shadow">
+                    <UserCircle2 className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-extrabold text-gray-900">Signed in</div>
+                    <div className="mt-1 text-sm text-gray-700">Your session is active on this device.</div>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onLogout}
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

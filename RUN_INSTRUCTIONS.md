@@ -67,7 +67,7 @@ Frontend will run at: **http://localhost:3000**
 Terminal 1 (Backend):
 ```bash
 cd c:\Users\HP\OneDrive\Desktop\Ugp
-python api.py
+uvicorn api:app --reload
 ```
 
 Terminal 2 (Frontend):

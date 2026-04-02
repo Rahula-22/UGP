@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Brain,
   LayoutDashboard,
@@ -17,21 +17,85 @@ import {
   ShieldCheck,
   TrendingUp,
   CalendarDays,
-} from 'lucide-react';
+} from "lucide-react";
+import MoodBuddy from "./MoodBuddy";
+import DailyMoodCheckIn from "./DailyMoodCheckIn";
+import StreakCard from "./StreakCard";
+import WellnessPointsCard from "./WellnessPointsCard";
+import BadgesSection from "./BadgesSection";
+import GratitudeGarden from "./GratitudeGarden";
+import DailyPositiveMessage from "./DailyPositiveMessage";
 
 function Dashboard({ user, onNavigate, onLogout }) {
-  const [activeNav, setActiveNav] = useState('dashboard'); // dashboard | resources | profile
+  const [activeNav, setActiveNav] = useState("dashboard");
+  const [currentMood, setCurrentMood] = useState(null);
+  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+  const [streak, setStreak] = useState(3);
+  const [longestStreak, setLongestStreak] = useState(7);
+  const [wellnessPoints, setWellnessPoints] = useState(145);
+  const [unlockedBadges, setUnlockedBadges] = useState(["first-step", "brave-heart", "3-day-streak"]);
+  const [gratitudeEntries, setGratitudeEntries] = useState([
+    "Today I am grateful for my supportive friend",
+    "I appreciate my ability to rest",
+    "I'm thankful for this safe space",
+  ]);
+
+  const pointsBreakdown = useMemo(() => ({
+    moodCheckin: 30,
+    chat: 60,
+    assessment: 40,
+    breathingExercise: 10,
+    gratitudeEntry: 5,
+  }), []);
+
+  useEffect(() => {
+    const savedData = localStorage.getItem("userWellnessData");
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      setCurrentMood(data.currentMood || null);
+      setHasCheckedInToday(data.hasCheckedInToday || false);
+      setStreak(data.streak || 0);
+      setLongestStreak(data.longestStreak || 0);
+      setWellnessPoints(data.wellnessPoints || 0);
+      setUnlockedBadges(data.unlockedBadges || []);
+      setGratitudeEntries(data.gratitudeEntries || []);
+    }
+  }, []);
+
+  const handleMoodSelect = (moodId) => {
+    setCurrentMood(moodId);
+    setHasCheckedInToday(true);
+
+    const userData = {
+      currentMood: moodId,
+      hasCheckedInToday: true,
+      streak,
+      longestStreak,
+      wellnessPoints,
+      unlockedBadges,
+      gratitudeEntries,
+      completedMilestones,
+    };
+    localStorage.setItem("userWellnessData", JSON.stringify(userData));
+  };
+
+  const handleAddGratitude = () => {
+    const newEntry = prompt("What are you grateful for today?");
+    if (newEntry) {
+      setGratitudeEntries([...gratitudeEntries, newEntry]);
+    }
+  };
 
   const greeting = useMemo(() => {
     const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (h < 12) return "Good morning";
+    if (h < 18) return "Good afternoon";
+    return "Good evening";
   }, []);
 
   const todayLabel = useMemo(() => {
     try {
-      return new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date());
+      return new Intl.DateTimeFormat(undefined, { weekday: "long", month: "short", day: "numeric" }).format(new Date());
     } catch {
       return new Date().toDateString();
     }
@@ -40,20 +104,20 @@ function Dashboard({ user, onNavigate, onLogout }) {
   const quote = useMemo(() => {
     const quotes = [
       {
-        text: 'You don’t have to control your thoughts. You just have to stop letting them control you.',
-        author: 'Dan Millman',
+        text: "You don't have to control your thoughts. You just have to stop letting them control you.",
+        author: "Dan Millman",
       },
       {
-        text: 'Small steps still move you forward. Be gentle with yourself today.',
-        author: 'Serenely',
+        text: "Small steps still move you forward. Be gentle with yourself today.",
+        author: "Serenely",
       },
       {
-        text: 'Breathe. This moment is allowed to be imperfect.',
-        author: 'Serenely',
+        text: "Breathe. This moment is allowed to be imperfect.",
+        author: "Serenely",
       },
       {
-        text: 'Your feelings are valid — and they can change. One kind action at a time.',
-        author: 'Serenely',
+        text: "Your feelings are valid - and they can change. One kind action at a time.",
+        author: "Serenely",
       },
     ];
     const idx = Math.abs(Math.floor(Date.now() / (1000 * 60 * 60 * 24))) % quotes.length;
@@ -63,31 +127,31 @@ function Dashboard({ user, onNavigate, onLogout }) {
   const resources = useMemo(
     () => [
       {
-        title: 'Breathing Exercise',
-        desc: 'A quick 60‑second reset to calm your body.',
+        title: "Breathing Exercise",
+        desc: "A quick 60-second reset to calm your body.",
         icon: Wind,
-        accent: 'from-sky-500 to-violet-600',
+        accent: "from-sky-500 to-violet-600",
         onClick: () => {},
       },
       {
-        title: 'Meditation',
-        desc: 'Short sessions to ease stress and improve sleep.',
+        title: "Meditation",
+        desc: "Short sessions to ease stress and improve sleep.",
         icon: Headphones,
-        accent: 'from-emerald-500 to-teal-600',
+        accent: "from-emerald-500 to-teal-600",
         onClick: () => {},
       },
       {
-        title: 'Emergency Helpline',
-        desc: 'If you’re in crisis, get help immediately.',
+        title: "Emergency Helpline",
+        desc: "If you're in crisis, get help immediately.",
         icon: PhoneCall,
-        accent: 'from-rose-500 to-orange-500',
+        accent: "from-rose-500 to-orange-500",
         onClick: () => {},
       },
       {
-        title: 'Read Articles',
-        desc: 'Practical guides for anxiety, sleep, and habits.',
+        title: "Read Articles",
+        desc: "Practical guides for anxiety, sleep, and habits.",
         icon: Newspaper,
-        accent: 'from-violet-500 to-fuchsia-600',
+        accent: "from-violet-500 to-fuchsia-600",
         onClick: () => {},
       },
     ],
@@ -97,22 +161,22 @@ function Dashboard({ user, onNavigate, onLogout }) {
   const overviewStats = useMemo(
     () => [
       {
-        label: 'Today',
+        label: "Today",
         value: todayLabel,
         icon: CalendarDays,
-        tone: 'bg-sky-50 text-sky-900 ring-sky-200/70',
+        tone: "bg-sky-50 text-sky-900 ring-sky-200/70",
       },
       {
-        label: 'Wellness focus',
-        value: 'Small steps',
+        label: "Wellness focus",
+        value: "Small steps",
         icon: TrendingUp,
-        tone: 'bg-violet-50 text-violet-900 ring-violet-200/70',
+        tone: "bg-violet-50 text-violet-900 ring-violet-200/70",
       },
       {
-        label: 'Privacy',
-        value: 'Secure session',
+        label: "Privacy",
+        value: "Secure session",
         icon: ShieldCheck,
-        tone: 'bg-emerald-50 text-emerald-900 ring-emerald-200/70',
+        tone: "bg-emerald-50 text-emerald-900 ring-emerald-200/70",
       },
     ],
     [todayLabel]
@@ -125,7 +189,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
         type="button"
         onClick={() => setActiveNav(id)}
         className={`inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold transition ${
-          active ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:bg-white/70 hover:text-gray-900'
+          active ? "bg-white shadow-sm text-gray-900" : "text-gray-600 hover:bg-white/70 hover:text-gray-900"
         }`}
       >
         <Icon className="h-4 w-4" />
@@ -136,7 +200,6 @@ function Dashboard({ user, onNavigate, onLogout }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50">
-      {/* Top navigation */}
       <div className="sticky top-0 z-30 border-b border-gray-200/70 bg-white/70 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
           <div className="flex items-center justify-between gap-3">
@@ -165,11 +228,10 @@ function Dashboard({ user, onNavigate, onLogout }) {
               </button>
             </div>
 
-            {/* Right side user chip */}
             <div className="flex items-center gap-3">
               <div className="hidden text-right sm:block">
-                <div className="text-sm font-semibold text-gray-900">{user?.username || 'User'}</div>
-                <div className="text-xs text-gray-500">{user?.email || '—'}</div>
+                <div className="text-sm font-semibold text-gray-900">{user?.username || "User"}</div>
+                <div className="text-xs text-gray-500">{user?.email || "--"}</div>
               </div>
               <div className="h-10 w-10 rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/70 flex items-center justify-center text-gray-700">
                 <UserCircle2 className="h-6 w-6" />
@@ -177,7 +239,6 @@ function Dashboard({ user, onNavigate, onLogout }) {
             </div>
           </div>
 
-          {/* Mobile nav */}
           <div className="mt-3 flex items-center justify-between gap-2 rounded-3xl bg-white/60 p-1 shadow-sm ring-1 ring-gray-200/60 md:hidden">
             <NavButton id="dashboard" icon={LayoutDashboard} label="Dashboard" />
             <NavButton id="resources" icon={BookOpen} label="Resources" />
@@ -195,31 +256,26 @@ function Dashboard({ user, onNavigate, onLogout }) {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-        {/* Welcome section */}
         <div className="rounded-3xl border border-gray-200/70 bg-white/70 p-6 shadow-sm backdrop-blur sm:p-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/70 px-3 py-1 text-xs font-semibold text-sky-700">
                 <Sparkles className="h-4 w-4" />
-                Today’s check-in • {todayLabel}
+                Today's check-in • {todayLabel}
               </div>
               <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">
-                {greeting}, {user?.username || 'there'}.
+                {greeting}, {user?.username || "there"}.
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">
-                We’re here to support your mental well‑being. Take a breath, choose a tool, and start where you are.
+                We are here to support your mental well-being. Take a breath, choose a tool, and start where you are.
               </p>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 {overviewStats.map((s) => {
                   const Icon = s.icon;
                   return (
-                    <div
-                      key={s.label}
-                      className={`rounded-2xl px-4 py-3 ring-1 ${s.tone}`}
-                    >
+                    <div key={s.label} className={`rounded-2xl px-4 py-3 ring-1 ${s.tone}`}>
                       <div className="flex items-center gap-2 text-xs font-semibold opacity-80">
                         <Icon className="h-4 w-4" />
                         {s.label}
@@ -238,20 +294,20 @@ function Dashboard({ user, onNavigate, onLogout }) {
                 </div>
                 <div>
                   <div className="text-sm font-extrabold text-gray-900">Your gentle reminder</div>
-                  <div className="mt-1 text-sm text-gray-600">Progress counts, even when it’s quiet.</div>
+                  <div className="mt-1 text-sm text-gray-600">Progress counts, even when it is quiet.</div>
                 </div>
               </div>
               <div className="mt-4 flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={() => onNavigate('assessment')}
+                  onClick={() => onNavigate("assessment")}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm ring-1 ring-gray-200/70 hover:bg-gray-50"
                 >
                   Take a quick assessment <ChevronRight className="h-4 w-4" />
                 </button>
                 <button
                   type="button"
-                  onClick={() => onNavigate('chat')}
+                  onClick={() => onNavigate("chat")}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:from-sky-600 hover:to-violet-700"
                 >
                   Talk to your companion <ChevronRight className="h-4 w-4" />
@@ -261,9 +317,42 @@ function Dashboard({ user, onNavigate, onLogout }) {
           </div>
         </div>
 
-        {activeNav === 'dashboard' && (
+        {activeNav === "dashboard" && (
           <>
-            {/* Main action cards */}
+            <div className="mt-8">
+              <MoodBuddy userMood={currentMood || "neutral"} />
+            </div>
+
+            <div className="mt-8">
+              <DailyMoodCheckIn
+                currentMood={currentMood}
+                onMoodSelect={handleMoodSelect}
+                hasCheckedInToday={hasCheckedInToday}
+              />
+            </div>
+
+            <div className="mt-8 grid gap-6 lg:grid-cols-3">
+              <StreakCard streak={streak} longestStreak={longestStreak} />
+              <WellnessPointsCard points={wellnessPoints} pointsBreakdown={pointsBreakdown} />
+              <div className="lg:col-span-1">
+                <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur">
+                  <div className="text-base font-extrabold tracking-tight text-gray-900 mb-2">Quick Stats</div>
+                  <div className="space-y-3">
+                    <div className="rounded-lg bg-gradient-to-br from-sky-50 to-blue-50 p-3 ring-1 ring-sky-200/60">
+                      <div className="text-xs text-sky-700 font-semibold">Mood Today</div>
+                      <div className="mt-1 text-lg font-bold text-sky-900">
+                        {currentMood ? currentMood.charAt(0).toUpperCase() + currentMood.slice(1) : "Not yet"}
+                      </div>
+                    </div>
+                    <div className="rounded-lg bg-gradient-to-br from-emerald-50 to-teal-50 p-3 ring-1 ring-emerald-200/60">
+                      <div className="text-xs text-emerald-700 font-semibold">Total Entry</div>
+                      <div className="mt-1 text-lg font-bold text-emerald-900">{gratitudeEntries.length}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="mt-8 grid gap-6 lg:grid-cols-2">
               <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur transition hover:shadow-lg sm:p-8">
                 <div className="flex items-start justify-between gap-4">
@@ -286,7 +375,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
                   </div>
                   <button
                     type="button"
-                    onClick={() => onNavigate('chat')}
+                    onClick={() => onNavigate("chat")}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow hover:from-sky-600 hover:to-violet-700"
                   >
                     Start Chat <ChevronRight className="h-4 w-4" />
@@ -306,7 +395,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
                     </div>
                   </div>
                   <div className="hidden rounded-2xl bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 ring-1 ring-violet-200 sm:inline-flex">
-                    2–10 min
+                    2-10 min
                   </div>
                 </div>
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -315,7 +404,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
                   </div>
                   <button
                     type="button"
-                    onClick={() => onNavigate('assessment')}
+                    onClick={() => onNavigate("assessment")}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-5 py-3 text-sm font-semibold text-white shadow hover:from-violet-600 hover:to-fuchsia-700"
                   >
                     Start Assessment <ChevronRight className="h-4 w-4" />
@@ -324,35 +413,18 @@ function Dashboard({ user, onNavigate, onLogout }) {
               </div>
             </div>
 
-            {/* Daily quote */}
             <div className="mt-8">
-              <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="text-sm font-extrabold text-gray-900">Daily quote</div>
-                    <div className="mt-1 text-sm text-gray-600">A small grounding thought for today.</div>
-                  </div>
-                  <div className="rounded-2xl bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 ring-1 ring-violet-200">
-                    Updated daily
-                  </div>
-                </div>
-
-                <div className="mt-5 grid gap-4 lg:grid-cols-3">
-                  <div className="rounded-3xl bg-gradient-to-br from-violet-600/10 via-white to-sky-500/10 p-6 ring-1 ring-gray-200/60 lg:col-span-2">
-                    <div className="text-base leading-relaxed text-gray-800">“{quote.text}”</div>
-                    <div className="mt-4 text-xs font-semibold text-gray-500">— {quote.author}</div>
-                  </div>
-                  <div className="rounded-3xl bg-emerald-50/60 p-6 ring-1 ring-emerald-200/60">
-                    <div className="text-xs font-semibold text-emerald-800">Tip</div>
-                    <div className="mt-2 text-sm leading-relaxed text-emerald-900">
-                      Try one small action: drink water, step outside, or message someone safe.
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <DailyPositiveMessage />
             </div>
 
-            {/* Quick help / resources */}
+            <div className="mt-8">
+              <BadgesSection unlockedBadges={unlockedBadges} />
+            </div>
+
+            <div className="mt-8">
+              <GratitudeGarden gratitudeEntries={gratitudeEntries} onAddGratitude={handleAddGratitude} />
+            </div>
+
             <div className="mt-8">
               <div className="flex items-end justify-between gap-4">
                 <div>
@@ -393,21 +465,20 @@ function Dashboard({ user, onNavigate, onLogout }) {
                   <div>
                     <div className="text-sm font-extrabold text-rose-900">In crisis? Get help now</div>
                     <div className="mt-2 text-sm leading-relaxed text-rose-800">
-                      If you’re experiencing a mental health emergency, contact local emergency services immediately.
-                      If you’re in the US, call or text <span className="font-extrabold">988</span> for the Suicide &amp; Crisis Lifeline.
-                      Outside the US, consider your country’s national crisis line or emergency number.
+                      If you are experiencing a mental health emergency, contact local emergency services immediately.
+                      If you are in the US, call or text <span className="font-extrabold">988</span> for the Suicide Crisis Lifeline.
+                      Outside the US, consider your country is national crisis line or emergency number.
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Minimal profile card for “real product” feel */}
             <div className="mt-8 grid gap-6 lg:grid-cols-3">
               <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8 lg:col-span-2">
-                <div className="text-sm font-extrabold text-gray-900">Privacy & care</div>
+                <div className="text-sm font-extrabold text-gray-900">Privacy and care</div>
                 <div className="mt-2 text-sm leading-relaxed text-gray-600">
-                  Your check-ins are personal. This app provides supportive information and wellness tools — it is not a substitute
+                  Your check-ins are personal. This app provides supportive information and wellness tools -- it is not a substitute
                   for professional medical advice, diagnosis, or treatment.
                 </div>
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -415,7 +486,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
                     <span className="font-extrabold">Secure sessions</span> and minimal data.
                   </div>
                   <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900 ring-1 ring-emerald-200/70">
-                    <span className="font-extrabold">Stigma‑free</span> support, designed to feel calm.
+                    <span className="font-extrabold">Stigma-free</span> support, designed to feel calm.
                   </div>
                 </div>
               </div>
@@ -424,8 +495,8 @@ function Dashboard({ user, onNavigate, onLogout }) {
                 <div className="text-sm font-extrabold text-gray-900">Your profile</div>
                 <div className="mt-4 rounded-3xl bg-gradient-to-br from-sky-500/10 via-white to-violet-600/10 p-5 ring-1 ring-gray-200/60">
                   <div className="text-xs font-semibold text-gray-500">Signed in as</div>
-                  <div className="mt-2 text-sm font-extrabold text-gray-900">{user?.username || 'User'}</div>
-                  <div className="mt-1 text-sm text-gray-600">{user?.email || '—'}</div>
+                  <div className="mt-2 text-sm font-extrabold text-gray-900">{user?.username || "User"}</div>
+                  <div className="mt-1 text-sm text-gray-600">{user?.email || "--"}</div>
                 </div>
                 <button
                   type="button"
@@ -440,7 +511,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
           </>
         )}
 
-        {activeNav === 'resources' && (
+        {activeNav === "resources" && (
           <div className="mt-8">
             <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -484,8 +555,8 @@ function Dashboard({ user, onNavigate, onLogout }) {
                   <div>
                     <div className="text-sm font-extrabold text-rose-900">In crisis? Get help now</div>
                     <div className="mt-2 text-sm leading-relaxed text-rose-800">
-                      If you’re experiencing a mental health emergency, contact local emergency services immediately.
-                      If you’re in the US, call or text <span className="font-extrabold">988</span>.
+                      If you are experiencing a mental health emergency, contact local emergency services immediately.
+                      If you are in the US, call or text <span className="font-extrabold">988</span>.
                     </div>
                   </div>
                 </div>
@@ -494,7 +565,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
           </div>
         )}
 
-        {activeNav === 'profile' && (
+        {activeNav === "profile" && (
           <div className="mt-8 grid gap-6 lg:grid-cols-3">
             <div className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8 lg:col-span-2">
               <div className="text-lg font-extrabold tracking-tight text-gray-900">Your profile</div>
@@ -503,18 +574,18 @@ function Dashboard({ user, onNavigate, onLogout }) {
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-3xl bg-gradient-to-br from-sky-500/10 via-white to-violet-600/10 p-6 ring-1 ring-gray-200/60">
                   <div className="text-xs font-semibold text-gray-500">Username</div>
-                  <div className="mt-2 text-sm font-extrabold text-gray-900">{user?.username || 'User'}</div>
+                  <div className="mt-2 text-sm font-extrabold text-gray-900">{user?.username || "User"}</div>
                 </div>
                 <div className="rounded-3xl bg-gradient-to-br from-emerald-500/10 via-white to-sky-500/10 p-6 ring-1 ring-gray-200/60">
                   <div className="text-xs font-semibold text-gray-500">Email</div>
-                  <div className="mt-2 text-sm font-extrabold text-gray-900">{user?.email || '—'}</div>
+                  <div className="mt-2 text-sm font-extrabold text-gray-900">{user?.email || "--"}</div>
                 </div>
               </div>
 
               <div className="mt-6 rounded-3xl border border-gray-200/70 bg-white/70 p-6 shadow-sm">
                 <div className="text-sm font-extrabold text-gray-900">Safety note</div>
                 <div className="mt-2 text-sm leading-relaxed text-gray-600">
-                  This app is designed for supportive guidance and self-care tools. If you’re worried about your safety,
+                  This app is designed for supportive guidance and self-care tools. If you are worried about your safety,
                   consider contacting a trusted person or local emergency services.
                 </div>
               </div>

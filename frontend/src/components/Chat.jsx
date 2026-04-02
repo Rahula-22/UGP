@@ -44,22 +44,45 @@ function Chat({ sessionToken, onBack }) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = selectedLang.code;
-    recognition.interimResults = false;
-    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.continuous = true;
+    recognition.maxAlternatives = 1;
 
     recognition.onstart = () => setIsListening(true);
 
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(prev => (prev ? prev + ' ' + transcript : transcript));
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      // Update input with both interim and final results
+      const displayText = finalTranscript || interimTranscript;
+      setInput(prev => {
+        // If we have a new final result, append it
+        if (finalTranscript) {
+          return (prev.split(/\s+/).slice(0, -1).join(' ') || '') + ' ' + finalTranscript;
+        }
+        // Otherwise show interim results
+        return (prev.split(/\s+/).slice(0, -1).join(' ') || '') + ' ' + interimTranscript;
+      });
     };
 
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
-      setIsListening(false);
     };
 
-    recognition.onend = () => setIsListening(false);
+    recognition.onend = () => {
+      setIsListening(false);
+      recognition.stop();
+    };
 
     recognitionRef.current = recognition;
     recognition.start();

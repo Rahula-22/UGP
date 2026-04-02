@@ -88,6 +88,45 @@ class Database:
             )
         """)
 
+        # Wellness stats table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS wellness_stats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL UNIQUE,
+                wellness_points INTEGER DEFAULT 0,
+                current_streak INTEGER DEFAULT 0,
+                longest_streak INTEGER DEFAULT 0,
+                last_checkin_date TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )
+        """)
+
+        # Badges table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS badges (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                badge_id TEXT NOT NULL,
+                badge_name TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id),
+                UNIQUE(user_id, badge_id)
+            )
+        """)
+
+        # Gratitude entries table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS gratitude_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                entry_text TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )
+        """)
+
         conn.commit()
         conn.close()
     
@@ -245,6 +284,116 @@ class Database:
         cursor = conn.cursor()
         cursor.execute(
             "SELECT * FROM mood_journal WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
+            (user_id, limit)
+        )
+        entries = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return entries
+
+    def get_or_create_wellness_stats(self, user_id: int) -> Dict:
+        """Get or create wellness stats for user"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM wellness_stats WHERE user_id = ?", (user_id,))
+        stats = cursor.fetchone()
+
+        if stats:
+            conn.close()
+            return dict(stats)
+
+        # Create new stats
+        cursor.execute(
+            "INSERT INTO wellness_stats (user_id) VALUES (?)",
+            (user_id,)
+        )
+        conn.commit()
+        cursor.execute("SELECT * FROM wellness_stats WHERE user_id = ?", (user_id,))
+        stats = cursor.fetchone()
+        conn.close()
+        return dict(stats)
+
+    def update_wellness_stats(self, user_id: int, points: int = 0, streak: int = None,
+                             longest_streak: int = None, last_checkin_date: str = None) -> Dict:
+        """Update wellness stats"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        updates = []
+        params = []
+
+        if points > 0:
+            updates.append("wellness_points = wellness_points + ?")
+            params.append(points)
+        if streak is not None:
+            updates.append("current_streak = ?")
+            params.append(streak)
+        if longest_streak is not None:
+            updates.append("longest_streak = ?")
+            params.append(longest_streak)
+        if last_checkin_date is not None:
+            updates.append("last_checkin_date = ?")
+            params.append(last_checkin_date)
+
+        if updates:
+            params.append(user_id)
+            query = f"UPDATE wellness_stats SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?"
+            cursor.execute(query, params)
+            conn.commit()
+
+        cursor.execute("SELECT * FROM wellness_stats WHERE user_id = ?", (user_id,))
+        stats = cursor.fetchone()
+        conn.close()
+        return dict(stats) if stats else {}
+
+    def add_badge(self, user_id: int, badge_id: str, badge_name: str) -> bool:
+        """Add badge to user"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute(
+                "INSERT INTO badges (user_id, badge_id, badge_name) VALUES (?, ?, ?)",
+                (user_id, badge_id, badge_name)
+            )
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.IntegrityError:
+            conn.close()
+            return False
+
+    def get_user_badges(self, user_id: int) -> List[Dict]:
+        """Get all badges for user"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM badges WHERE user_id = ? ORDER BY created_at DESC", (user_id,))
+        badges = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return badges
+
+    def add_gratitude_entry(self, user_id: int, entry_text: str) -> int:
+        """Add gratitude entry"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "INSERT INTO gratitude_entries (user_id, entry_text) VALUES (?, ?)",
+            (user_id, entry_text)
+        )
+        conn.commit()
+        entry_id = cursor.lastrowid
+        conn.close()
+        return entry_id
+
+    def get_gratitude_entries(self, user_id: int, limit: int = 50) -> List[Dict]:
+        """Get gratitude entries for user"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT * FROM gratitude_entries WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
             (user_id, limit)
         )
         entries = [dict(row) for row in cursor.fetchall()]

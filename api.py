@@ -655,6 +655,112 @@ async def get_mood_journal(session_token: str, limit: int = 30):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-if __name__ == "__main__":
+@app.get("/api/wellness-stats/{session_token}")
+async def get_wellness_stats(session_token: str):
+    """Get wellness stats (points, streaks, etc)"""
+    user = db.verify_session(session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        stats = db.get_or_create_wellness_stats(user['id'])
+        return {"stats": stats}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class WellnessStatsUpdate(BaseModel):
+    session_token: str
+    points: int = 0
+    streak: Optional[int] = None
+    longest_streak: Optional[int] = None
+    last_checkin_date: Optional[str] = None
+
+
+@app.post("/api/wellness-stats/update")
+async def update_wellness_stats(request: WellnessStatsUpdate):
+    """Update wellness stats"""
+    user = db.verify_session(request.session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        stats = db.update_wellness_stats(
+            user_id=user['id'],
+            points=request.points,
+            streak=request.streak,
+            longest_streak=request.longest_streak,
+            last_checkin_date=request.last_checkin_date
+        )
+        return {"success": True, "stats": stats}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class BadgeRequest(BaseModel):
+    session_token: str
+    badge_id: str
+    badge_name: str
+
+
+@app.post("/api/badges/add")
+async def add_badge(request: BadgeRequest):
+    """Add badge to user"""
+    user = db.verify_session(request.session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        success = db.add_badge(user['id'], request.badge_id, request.badge_name)
+        if success:
+            return {"success": True, "message": f"Badge {request.badge_name} unlocked!"}
+        else:
+            return {"success": False, "message": "Badge already unlocked"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/badges/{session_token}")
+async def get_badges(session_token: str):
+    """Get all badges for user"""
+    user = db.verify_session(session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        badges = db.get_user_badges(user['id'])
+        return {"badges": badges}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class GratitudeRequest(BaseModel):
+    session_token: str
+    entry_text: str
+
+
+@app.post("/api/gratitude/add")
+async def add_gratitude_entry(request: GratitudeRequest):
+    """Add gratitude entry"""
+    user = db.verify_session(request.session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        entry_id = db.add_gratitude_entry(user['id'], request.entry_text)
+        return {"success": True, "entry_id": entry_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/gratitude/{session_token}")
+async def get_gratitude_entries(session_token: str, limit: int = 50):
+    """Get gratitude entries for user"""
+    user = db.verify_session(session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        entries = db.get_gratitude_entries(user['id'], limit=limit)
+        return {"entries": entries}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

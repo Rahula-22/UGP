@@ -48,8 +48,9 @@ To run the project locally, follow these steps:
    ```
 
 4. **Set up environment variables**
-   - Create a `.env` file in the root directory
-   - Add your OpenAI API key: `OPENAI_API_KEY=your_api_key_here`
+   - Copy `.env.example` to `.env` (or create a `.env` file)
+   - Add your Groq API key: `GROQ_API_KEY=your_groq_api_key_here`
+   - Note: you can also enter your Groq key in the app sidebar
 
 5. **Run the backend server**
    ```bash

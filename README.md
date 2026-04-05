@@ -1,175 +1,198 @@
 # Mental Health and Well-being AI Companion
 
-A full-stack mental wellness platform that combines:
+Full-stack mental wellness application with a FastAPI backend and a React + Vite frontend.
 
-- RAG-based conversational support over uploaded PDF knowledge sources
-- Emotion-aware response generation
+Core capabilities:
+
+- Retrieval-augmented AI chat over uploaded PDF knowledge sources
+- Emotion-aware response support
 - Clinical self-assessments (DASS-42, PHQ-9, GAD-7)
-- Mood journaling and wellness tracking
-- Gamified self-care tools (breathing and thought reframing)
+- Mood journaling and wellness progress tracking
+- Gamified wellness elements (badges, gratitude, mini-games)
 
-Backend is built with FastAPI and LangChain. Frontend is built with React and Vite.
+## Live Demo
 
-## What The Current Project Includes
+- https://frontend-iota-smoky-22.vercel.app/
 
-- AI chat with source-grounded retrieval from FAISS vector storage
-- User authentication and session handling with SQLite
-- Assessment workflows and score interpretation
-- Assessment support chat and AI interpretation endpoint
-- Mood journal history and wellness stats tracking
-- Badges and gratitude entries
-- Emotion detection endpoint and emotion history
-- Optional conversation-dataset ingestion from parquet data
+## Repository Analysis Snapshot
+
+This README has been aligned to the current codebase (April 2026):
+
+- Backend entrypoint: `api.py` (FastAPI app)
+- Chat/RAG logic: `chatbot.py`
+- Runtime config loader: `config_runtime.py` (reads from `config.py` or environment)
+- Frontend app: `frontend/src/App.jsx` with Vite dev server on port `3000`
+- Local data assets: `data/` (PDFs, vectorstore, SQLite DB)
+- Optional dataset ingestion: `process_dataset.py` from `data2/`
 
 ## Tech Stack
 
-- Python, FastAPI, Uvicorn
-- LangChain, FAISS, sentence-transformers
-- Groq API for LLM responses
-- React 18, Vite, Tailwind CSS
-- SQLite for user and wellness data
+- Backend: Python, FastAPI, Uvicorn, Pydantic
+- AI/RAG: LangChain, FAISS, sentence-transformers, Groq
+- Data: SQLite (application data), local FAISS index (`data/vectorstore/index.faiss`)
+- Frontend: React 18, Vite, Tailwind CSS, Axios
 
-## Project Layout
+## Project Structure
 
-- api.py: Main FastAPI backend
-- chatbot.py: RAG and Groq response logic
-- document_processor.py: PDF loading and chunking
-- database.py: SQLite schema and data access
-- process_documents.py: Build vector store from PDFs
-- process_dataset.py: Add parquet conversation data into vector store
-- frontend/: Vite React client
-- data/: PDFs, vectorstore, and local database storage
-- data2/: parquet dataset source
-- backend.dockerfile, render.yaml, railway.json, frontend/vercel.json: deployment configs
+- `api.py`: Main REST API
+- `chatbot.py`: RAG retrieval + response generation flow
+- `document_processor.py`: PDF extraction and chunking
+- `database.py`: SQLite schema and persistence helpers
+- `process_documents.py`: Build/rebuild vectorstore from PDFs
+- `process_dataset.py`: Add parquet conversation data to vectorstore
+- `config.py`: Local development config (supports `.env` through `python-dotenv`)
+- `config_runtime.py`: Deployment-safe runtime configuration fallback
+- `frontend/`: React client
+- `backend.dockerfile`, `render.yaml`, `railway.json`, `frontend/vercel.json`: Deployment configs
 
 ## Prerequisites
 
-- Python 3.9 or newer recommended
-- Node.js 18 or newer recommended
+- Python 3.9+
+- Node.js 18+
 - pip and npm
-- A Groq API key
+- Groq API key
 
-## Local Setup
+## Configuration
 
-1. Install backend dependencies
+Backend can be configured in either of these ways:
 
-       pip install -r requirements.txt
+1. `config.py` (local developer settings)
+2. Environment variables (recommended for deployment)
 
-2. Install frontend dependencies
+Minimum required variable:
 
-       cd frontend
-       npm install
-       cd ..
+- `GROQ_API_KEY`
 
-3. Configure environment variables
+Common optional variables:
 
-   Create a .env file in the project root (optional but recommended):
+- `PDF_DIRECTORY` (default: `data`)
+- `VECTORSTORE_DIRECTORY` (default: `data/vectorstore`)
+- `FRONTEND_URL` (single CORS origin)
+- `FRONTEND_URLS` (comma-separated CORS origins)
+- `CORS_ORIGIN_REGEX` (default allows common hosted frontend domains)
+- `VITE_API_BASE_URL` (frontend API base override)
 
-       GROQ_API_KEY=your_groq_api_key
-       FRONTEND_URL=http://localhost:3000
+Example `.env` for local backend:
 
-  Notes:
+```env
+GROQ_API_KEY=your_groq_api_key
+FRONTEND_URL=http://localhost:3000
+```
 
-  - FRONTEND_URL is optional and is used to append an allowed CORS origin.
-  - The frontend can also use VITE_API_BASE_URL (defaults to http://localhost:8000/api).
+## Local Development Setup
 
-4. Prepare the knowledge base
+1. Install backend dependencies:
 
-   Add PDF files to the data folder, then run:
+```bash
+pip install -r requirements.txt
+```
 
-       python process_documents.py
+2. Install frontend dependencies:
 
-   Optional: merge conversation dataset from data2/0000.parquet into the same vectorstore:
+```bash
+cd frontend
+npm install
+cd ..
+```
 
-       python process_dataset.py
+3. Prepare knowledge base (required for document-grounded answers):
 
-## Run The App (Development)
+```bash
+python process_documents.py
+```
 
-Start backend (from project root):
+Optional: ingest dataset from `data2/0000.parquet`:
 
-    uvicorn api:app --reload --host 0.0.0.0 --port 8000
+```bash
+python process_dataset.py
+```
 
-Start frontend (from frontend folder):
+4. Start backend API (project root):
 
-    npm run dev
+```bash
+uvicorn api:app --reload --host 0.0.0.0 --port 8000
+```
+
+5. Start frontend (from `frontend/`):
+
+```bash
+npm run dev
+```
 
 Open:
 
 - Frontend: http://localhost:3000
-- Backend API docs: http://localhost:8000/docs
+- API docs: http://localhost:8000/docs
 
-## Key API Groups
+## API Overview
 
-- System and setup:
-  - GET /
-  - GET /api/status
-  - POST /api/set-api-key
+System:
 
-- RAG chat and docs:
-  - POST /api/chat
-  - POST /api/chat-with-emotion
-  - POST /api/chat-with-auth
-  - POST /api/upload-pdf
-  - POST /api/process-documents
-  - GET /api/list-pdfs
-  - DELETE /api/clear-knowledge-base
-  - DELETE /api/clear-chat-history
+- `GET /`
+- `GET /api/status`
+- `POST /api/set-api-key`
 
-- Emotion utilities:
-  - POST /api/analyze-emotion
-  - GET /api/emotion-history
-  - DELETE /api/clear-emotion-history
+Chat and documents:
 
-- Auth and user:
-  - POST /api/register
-  - POST /api/login
-  - POST /api/verify-session
+- `POST /api/chat`
+- `POST /api/chat-with-auth`
+- `POST /api/chat-with-emotion`
+- `POST /api/upload-pdf`
+- `POST /api/process-documents`
+- `GET /api/list-pdfs`
+- `DELETE /api/clear-knowledge-base`
+- `DELETE /api/clear-chat-history`
 
-- Assessments:
-  - POST /api/submit-assessment
-  - GET /api/get-assessments/{session_token}
-  - POST /api/assessment-support
-  - POST /api/assessment-chat
+Emotion:
 
-- Wellness and gamification:
-  - POST /api/mood-journal
-  - GET /api/mood-journal/{session_token}
-  - GET /api/wellness-stats/{session_token}
-  - POST /api/wellness-stats/update
-  - POST /api/badges/add
-  - GET /api/badges/{session_token}
-  - POST /api/gratitude/add
-  - GET /api/gratitude/{session_token}
+- `POST /api/analyze-emotion`
+- `GET /api/emotion-history`
+- `DELETE /api/clear-emotion-history`
 
-## Deployment Notes
+Auth and sessions:
 
-- Backend
-  - Docker: backend.dockerfile
-  - Railway: railway.json
+- `POST /api/register`
+- `POST /api/login`
+- `POST /api/verify-session`
 
-- Frontend
-  - Vercel config: frontend/vercel.json
+Assessments:
 
-Set production environment variables (especially GROQ_API_KEY and frontend API base URL) in your hosting platform.
+- `POST /api/submit-assessment`
+- `GET /api/get-assessments/{session_token}`
+- `POST /api/assessment-support`
+- `POST /api/assessment-chat`
 
-Recommended production variables:
+Wellness and gamification:
 
-- Backend:
-  - FRONTEND_URL=https://your-frontend-domain.com
-  - FRONTEND_URLS=https://your-frontend-domain.com,https://your-secondary-domain.com
-  - CORS_ORIGIN_REGEX=https://.*\.(vercel\.app|netlify\.app|onrender\.com)$
-- Frontend:
-  - VITE_API_BASE_URL=https://your-backend-domain.com
+- `POST /api/mood-journal`
+- `GET /api/mood-journal/{session_token}`
+- `GET /api/wellness-stats/{session_token}`
+- `POST /api/wellness-stats/update`
+- `POST /api/badges/add`
+- `GET /api/badges/{session_token}`
+- `POST /api/gratitude/add`
+- `GET /api/gratitude/{session_token}`
 
-## Optional Legacy UI
+## Deployment
 
-A Streamlit interface also exists in app.py and can be run separately:
+Backend options included in repo:
 
-    streamlit run app.py
+- Docker file: `backend.dockerfile`
+- Railway config: `railway.json`
 
-The primary active product UI is the React frontend in the frontend folder.
+Frontend option included in repo:
 
-## Important Disclaimer
+- Vercel config: `frontend/vercel.json`
 
-This project is intended for educational and supportive wellness use. It is not a substitute for professional medical diagnosis or treatment. If someone is in immediate crisis, contact local emergency services or a qualified crisis helpline right away.
+Production recommendation:
+
+- Backend: set `GROQ_API_KEY` and frontend origin/CORS variables
+- Frontend: set `VITE_API_BASE_URL` to backend base URL
+
+
+Primary UI is the React app in `frontend/`.
+
+## Disclaimer
+
+This project is for educational and supportive wellness use. It is not a substitute for professional medical diagnosis or treatment. In emergencies, contact local emergency services or a qualified crisis helpline immediately.
 

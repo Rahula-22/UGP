@@ -132,8 +132,7 @@ function Chat({ sessionToken, onBack }) {
 
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: response.data.response,
-        sources: response.data.sources
+        content: response.data.response
       }]);
     } catch (error) {
       console.error('Error:', error);

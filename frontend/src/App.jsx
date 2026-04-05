@@ -186,7 +186,7 @@ function App() {
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">About This AI</h3>
                 <p className="text-xs text-gray-600 leading-relaxed">
-                  I'm your mental health companion, trained on professional documents to provide supportive information.
+                  I'm your mental health companion, built to provide supportive information.
                 </p>
               </div>
 
@@ -199,7 +199,7 @@ function App() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-indigo-600 mt-0.5">•</span>
-                    <span>Get information based on trusted documents</span>
+                    <span>Get supportive guidance in plain language</span>
                   </li>
                 </ul>
               </div>
@@ -215,7 +215,7 @@ function App() {
           {/* Footer */}
           <div className="p-4 border-t border-gray-200 bg-gray-50">
             <p className="text-xs text-gray-500 text-center">
-              Powered by Groq AI • RAG System
+              Powered by Groq AI
             </p>
           </div>
         </div>

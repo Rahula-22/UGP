@@ -77,8 +77,7 @@ function App() {
 
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: response.data.response,
-        sources: response.data.sources
+        content: response.data.response
       }]);
     } catch (error) {
       showNotification('Error getting response: ' + error.message, 'error');
@@ -202,10 +201,6 @@ function App() {
                     <span className="text-indigo-600 mt-0.5">•</span>
                     <span>Get information based on trusted documents</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-600 mt-0.5">•</span>
-                    <span>View sources for transparency</span>
-                  </li>
                 </ul>
               </div>
 
@@ -295,21 +290,6 @@ function App() {
                 <div className={`markdown-content ${message.role === 'user' ? 'text-white' : 'text-gray-800'}`}>
                   <ReactMarkdown>{message.content}</ReactMarkdown>
                 </div>
-                {message.sources && message.sources.length > 0 && (
-                  <details className="mt-3 pt-3 border-t border-gray-200">
-                    <summary className="text-sm text-gray-600 cursor-pointer hover:text-gray-900">
-                      📄 View Sources ({message.sources.length})
-                    </summary>
-                    <div className="mt-2 space-y-2">
-                      {message.sources.map((source, idx) => (
-                        <div key={idx} className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                          <p className="font-medium">{source.source} (Page {source.page})</p>
-                          <p className="text-gray-500 mt-1">{source.content}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                )}
               </div>
             </div>
           ))}

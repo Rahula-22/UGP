@@ -76,9 +76,13 @@ To deploy your app online and get a single URL to share:
 
 **Deployment Architecture**:
 - Frontend: **Vercel** (your public URL)
-- Backend: **Render** (free API server)
+- Backend: **Railway** (API server)
 
 After deployment, you'll have a single URL like: `https://your-app.vercel.app` 🚀
+
+## 🌐 Live Demo
+
+Access the app here: https://frontend-iota-smoky-22.vercel.app
 
 ## 📄 Usage
 

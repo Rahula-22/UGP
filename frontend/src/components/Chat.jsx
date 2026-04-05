@@ -157,18 +157,6 @@ function Chat({ sessionToken, onBack }) {
                 <div className={`markdown-content ${message.role === 'user' ? 'text-white' : 'text-gray-800'}`}>
                   <ReactMarkdown>{message.content}</ReactMarkdown>
                 </div>
-                {message.sources && message.sources.length > 0 && (
-                  <details className="mt-3 pt-3 border-t border-gray-200">
-                    <summary className="text-sm text-gray-600 cursor-pointer">📄 Sources ({message.sources.length})</summary>
-                    <div className="mt-2 space-y-2">
-                      {message.sources.map((source, idx) => (
-                        <div key={idx} className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                          <p className="font-medium">{source.source} (Page {source.page})</p>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-                )}
               </div>
             </div>
           ))}

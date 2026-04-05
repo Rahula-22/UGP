@@ -29,6 +29,7 @@ function Chat({ sessionToken, onBack }) {
   );
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
+  const finalTranscriptRef = useRef('');
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -44,34 +45,30 @@ function Chat({ sessionToken, onBack }) {
     const recognition = new SpeechRecognition();
     recognition.lang = selectedLang.code;
     recognition.interimResults = true;
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.maxAlternatives = 1;
 
-    recognition.onstart = () => setIsListening(true);
+    recognition.onstart = () => {
+      setIsListening(true);
+      finalTranscriptRef.current = '';
+    };
 
     recognition.onresult = (event) => {
       let interimTranscript = '';
-      let finalTranscript = '';
 
+      // Process only new results since last event
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
+          finalTranscriptRef.current += transcript + ' ';
         } else {
           interimTranscript += transcript;
         }
       }
 
-      // Update input with both interim and final results
-      const displayText = finalTranscript || interimTranscript;
-      setInput(prev => {
-        // If we have a new final result, append it
-        if (finalTranscript) {
-          return (prev.split(/\s+/).slice(0, -1).join(' ') || '') + ' ' + finalTranscript;
-        }
-        // Otherwise show interim results
-        return (prev.split(/\s+/).slice(0, -1).join(' ') || '') + ' ' + interimTranscript;
-      });
+      // Update input with final transcript + current interim
+      const displayText = finalTranscriptRef.current + interimTranscript;
+      setInput(displayText.trim());
     };
 
     recognition.onerror = (event) => {
@@ -80,7 +77,6 @@ function Chat({ sessionToken, onBack }) {
 
     recognition.onend = () => {
       setIsListening(false);
-      recognition.stop();
     };
 
     recognitionRef.current = recognition;

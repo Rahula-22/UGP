@@ -10,10 +10,12 @@ const getDefaultBase = () => {
     if (host === "localhost" || host === "127.0.0.1") {
       return "http://localhost:8000";
     }
+
+    // In production, default to same-origin so platforms using rewrites/proxies keep working.
+    return window.location.origin;
   }
 
-  // Fallback for deployed frontend when env var is not configured.
-  return "https://mental-health-ai-companion-api.onrender.com";
+  return "";
 };
 
 const configuredBase = normalizeBase(import.meta.env.VITE_API_BASE_URL);

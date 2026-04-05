@@ -9,15 +9,37 @@ from typing import Optional, Dict, List
 import os
 
 class Database:
-    def __init__(self, db_path: str = "data/users.db"):
+    def __init__(self, db_path: str = ""):
         """Initialize database connection"""
-        self.db_path = db_path
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        configured_path = os.getenv("DATABASE_PATH", "").strip()
+        selected_path = (db_path or configured_path or "data/users.db").strip()
+        self.db_path = self._resolve_writable_db_path(selected_path)
         self.init_db()
+
+    def _resolve_writable_db_path(self, preferred_path: str) -> str:
+        """Resolve a writable DB path, with a safe fallback for hosted environments."""
+        absolute_path = os.path.abspath(preferred_path)
+        preferred_dir = os.path.dirname(absolute_path) or "."
+
+        try:
+            os.makedirs(preferred_dir, exist_ok=True)
+            probe_file = os.path.join(preferred_dir, ".db_write_probe")
+            with open(probe_file, "w", encoding="utf-8"):
+                pass
+            os.remove(probe_file)
+            return absolute_path
+        except OSError:
+            fallback_dir = os.getenv("DATABASE_FALLBACK_DIR", "").strip()
+            if not fallback_dir:
+                fallback_dir = os.path.join(os.getenv("TEMP", "/tmp"), "ugp_data")
+
+            os.makedirs(fallback_dir, exist_ok=True)
+            db_name = os.path.basename(absolute_path) or "users.db"
+            return os.path.join(fallback_dir, db_name)
     
     def get_connection(self):
         """Get database connection"""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
         conn.row_factory = sqlite3.Row
         return conn
     

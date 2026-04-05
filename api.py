@@ -281,12 +281,20 @@ async def list_pdfs():
 @app.post("/api/register")
 async def register(request: RegisterRequest):
     """Register a new user"""
-    user_id = db.create_user(request.username, request.email, request.password)
-    
-    if user_id:
-        return {"success": True, "message": "User registered successfully"}
-    else:
+    try:
+        user_id = db.create_user(request.username, request.email, request.password)
+
+        if user_id:
+            return {"success": True, "message": "User registered successfully"}
+
         raise HTTPException(status_code=400, detail="Username or email already exists")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Registration failed on server: {str(e)}"
+        )
 
 @app.post("/api/login")
 async def login(request: LoginRequest):

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Brain, Lock, User, Mail, AlertCircle } from 'lucide-react';
-
-const API_BASE = 'http://localhost:8000';
+import { API_BASE } from '../config/api';
 
 function Login({ onLoginSuccess, defaultIsRegister = false, onBack }) {
   const [isRegister, setIsRegister] = useState(Boolean(defaultIsRegister));
@@ -53,7 +52,8 @@ function Login({ onLoginSuccess, defaultIsRegister = false, onBack }) {
         onLoginSuccess(response.data.user, response.data.session_token);
       }
     } catch (error) {
-      setError(error.response?.data?.detail || 'An error occurred');
+      const message = error.response?.data?.detail || error.message || 'An error occurred';
+      setError(message);
     } finally {
       setLoading(false);
     }

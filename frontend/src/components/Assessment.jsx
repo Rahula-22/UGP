@@ -5,8 +5,7 @@ import {
   ShieldAlert, MessageCircle, BookOpen, TrendingUp, Heart,
   Send, Brain, RefreshCw, Sparkles, Clock, Lock, Star,
 } from 'lucide-react';
-
-const API_BASE = 'http://localhost:8000';
+import { API_BASE } from '../config/api';
 
 // ─── ASSESSMENT DATA ─────────────────────────────────────────────────────────
 

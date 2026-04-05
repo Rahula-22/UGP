@@ -10,8 +10,7 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Chat from './components/Chat';
 import Assessment from './components/Assessment';
-
-const API_BASE = 'http://localhost:8000';
+import { API_BASE } from './config/api';
 
 function App() {
   const [messages, setMessages] = useState([]);

@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Send, Brain, Loader2, ArrowLeft, Mic, MicOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-
-const API_BASE = 'http://localhost:8000';
+import { API_BASE } from '../config/api';
 
 const LANGUAGES = [
   { label: 'English',              code: 'en-US', name: 'English' },

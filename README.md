@@ -1,121 +1,168 @@
-# 🧠 Mental Health AI Companion
+# Mental Health and Well-being AI Companion
 
-A RAG (Retrieval-Augmented Generation) based AI chatbot that provides mental health support by answering queries related to mental health. Built with Python, FastAPI, React, and Groq AI.
+A full-stack mental wellness platform that combines:
 
-![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
-![React](https://img.shields.io/badge/React-18+-61DAFB.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+- RAG-based conversational support over uploaded PDF knowledge sources
+- Emotion-aware response generation
+- Clinical self-assessments (DASS-42, PHQ-9, GAD-7)
+- Mood journaling and wellness tracking
+- Gamified self-care tools (breathing and thought reframing)
 
-## ✨ Features
+Backend is built with FastAPI and LangChain. Frontend is built with React and Vite.
 
-- 🤖 **AI-Powered Chat**: Uses Groq's fast LLM for natural language responses
-- 📚 **Document RAG**: Retrieves relevant information from uploaded PDF documents
-- 🎨 **Modern UI**: Beautiful React frontend with Tailwind CSS
-- ⚡ **Fast**: FAISS vector database for millisecond similarity search
-- 🔒 **Private**: Runs completely locally with your own API key
-- 📄 **Source Tracking**: Shows which documents were used for each answer
+## What The Current Project Includes
 
-## 🏗️ Architecture
+- AI chat with source-grounded retrieval from FAISS vector storage
+- User authentication and session handling with SQLite
+- Assessment workflows and score interpretation
+- Assessment support chat and AI interpretation endpoint
+- Mood journal history and wellness stats tracking
+- Badges and gratitude entries
+- Emotion detection endpoint and emotion history
+- PDF upload and knowledge base processing endpoints
+- Optional conversation-dataset ingestion from parquet data
 
-The application is built using a modular microservices architecture:
+## Tech Stack
 
-- **Frontend**: React app for user interface
-- **Backend**: FastAPI for serving the model and processing requests
-- **Vector Database**: FAISS for efficient similarity search
-- **LLM**: Groq AI's language model for generating responses
+- Python, FastAPI, Uvicorn
+- LangChain, FAISS, sentence-transformers
+- Groq API for LLM responses
+- React 18, Vite, Tailwind CSS
+- SQLite for user and wellness data
 
-## 📦 Installation & Setup
+## Project Layout
 
-To run the project locally, follow these steps:
+- api.py: Main FastAPI backend
+- chatbot.py: RAG and Groq response logic
+- document_processor.py: PDF loading and chunking
+- database.py: SQLite schema and data access
+- process_documents.py: Build vector store from PDFs
+- process_dataset.py: Add parquet conversation data into vector store
+- frontend/: Vite React client
+- data/: PDFs, vectorstore, and local database storage
+- data2/: parquet dataset source
+- backend.dockerfile, render.yaml, railway.json, frontend/vercel.json: deployment configs
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Rahul-a22/mental-health-ai-companion.git
-   cd UGP
-   ```
+## Prerequisites
 
-2. **Install Python dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+- Python 3.9 or newer recommended
+- Node.js 18 or newer recommended
+- pip and npm
+- A Groq API key
 
-3. **Install Node.js dependencies (for frontend)**
-   ```bash
-   cd frontend
-   npm install
-   cd ..
-   ```
+## Local Setup
 
-4. **Set up environment variables**
-   - Copy `.env.example` to `.env` (or create a `.env` file)
-   - Add your Groq API key: `GROQ_API_KEY=your_groq_api_key_here`
-   - Note: you can also enter your Groq key in the app sidebar
+1. Install backend dependencies
 
-5. **Run the backend server**
-   ```bash
-   uvicorn api:app --reload
-   ```
+       pip install -r requirements.txt
 
-6. **Run the frontend development server**
-   ```bash
-   cd frontend
-   npm start
-   ```
+2. Install frontend dependencies
 
-7. **Open your browser**
-   - Navigate to `http://localhost:3000` for the frontend
-   - The backend API will be running at `http://localhost:8000`
+       cd frontend
+       npm install
+       cd ..
 
-## 🌐 Deploy Online (Get a Single URL)
+3. Configure environment variables
 
-To deploy your app online and get a single URL to share:
+   Create a .env file in the project root (optional but recommended):
 
-1. **📖 Quick Start**: Read [QUICK_START_DEPLOYMENT.md](QUICK_START_DEPLOYMENT.md) (5 minutes)
-2. **📚 Detailed Guide**: Read [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for troubleshooting
+       GROQ_API_KEY=your_groq_api_key
+       FRONTEND_URL=http://localhost:3000
 
-**Deployment Architecture**:
-- Frontend: **Vercel** (your public URL)
-- Backend: **Railway** (API server)
+  Notes:
 
-After deployment, you'll have a single URL like: `https://your-app.vercel.app` 🚀
+  - FRONTEND_URL is optional and is used to append an allowed CORS origin.
+  - The frontend can also use VITE_API_BASE_URL (defaults to http://localhost:8000/api).
 
-## 🌐 Live Demo
+4. Prepare the knowledge base
 
-Access the app here: https://frontend-iota-smoky-22.vercel.app
+   Add PDF files to the data folder, then run:
 
-## 📄 Usage
+       python process_documents.py
 
-1. **Upload PDF documents**
-   - Use the "Upload" button to select PDF files from your computer
-   - Supported formats: PDF
+   Optional: merge conversation dataset from data2/0000.parquet into the same vectorstore:
 
-2. **Ask questions**
-   - Type your question in the input box
-   - Press "Enter" or click the "Send" button
-   - The AI will respond with relevant information from the documents
+       python process_dataset.py
 
-3. **View source documents**
-   - Click on the "Sources" button in the response card
-   - A modal will open, showing the list of documents used for the answer
+## Run The App (Development)
 
-## 🛠️ Development
+Start backend (from project root):
 
-To contribute to the project, follow these guidelines:
+    uvicorn api:app --reload --host 0.0.0.0 --port 8000
 
-- Use `git` for version control
-- Create a new branch for each feature or bugfix
-- Follow the existing code style and conventions
-- Write clear, concise commit messages
-- Submit a pull request for review
+Start frontend (from frontend folder):
 
-## 📜 License
+    npm run dev
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Open:
 
-## 🤝 Acknowledgments
+- Frontend: http://localhost:3000
+- Backend API docs: http://localhost:8000/docs
 
-- Inspired by the need for accessible mental health support
-- Built with ❤️ by [Rahul Ahirwar](https://github.com/Rahula-22)
-- Special thanks to the contributors and supporters of this project
+## Key API Groups
+
+- System and setup:
+  - GET /
+  - GET /api/status
+  - POST /api/set-api-key
+
+- RAG chat and docs:
+  - POST /api/chat
+  - POST /api/chat-with-emotion
+  - POST /api/chat-with-auth
+  - POST /api/upload-pdf
+  - POST /api/process-documents
+  - GET /api/list-pdfs
+  - DELETE /api/clear-knowledge-base
+  - DELETE /api/clear-chat-history
+
+- Emotion utilities:
+  - POST /api/analyze-emotion
+  - GET /api/emotion-history
+  - DELETE /api/clear-emotion-history
+
+- Auth and user:
+  - POST /api/register
+  - POST /api/login
+  - POST /api/verify-session
+
+- Assessments:
+  - POST /api/submit-assessment
+  - GET /api/get-assessments/{session_token}
+  - POST /api/assessment-support
+  - POST /api/assessment-chat
+
+- Wellness and gamification:
+  - POST /api/mood-journal
+  - GET /api/mood-journal/{session_token}
+  - GET /api/wellness-stats/{session_token}
+  - POST /api/wellness-stats/update
+  - POST /api/badges/add
+  - GET /api/badges/{session_token}
+  - POST /api/gratitude/add
+  - GET /api/gratitude/{session_token}
+
+## Deployment Notes
+
+- Backend
+  - Docker: backend.dockerfile
+  - Render: render.yaml
+  - Railway: railway.json
+
+- Frontend
+  - Vercel config: frontend/vercel.json
+
+Set production environment variables (especially GROQ_API_KEY and frontend API base URL) in your hosting platform.
+
+## Optional Legacy UI
+
+A Streamlit interface also exists in app.py and can be run separately:
+
+    streamlit run app.py
+
+The primary active product UI is the React frontend in the frontend folder.
+
+## Important Disclaimer
+
+This project is intended for educational and supportive wellness use. It is not a substitute for professional medical diagnosis or treatment. If someone is in immediate crisis, contact local emergency services or a qualified crisis helpline right away.
 

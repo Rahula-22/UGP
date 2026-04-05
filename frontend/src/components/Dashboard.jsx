@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   TrendingUp,
   CalendarDays,
+  Gamepad2,
 } from "lucide-react";
 import MoodBuddy from "./MoodBuddy";
 import DailyMoodCheckIn from "./DailyMoodCheckIn";
@@ -25,9 +26,11 @@ import WellnessPointsCard from "./WellnessPointsCard";
 import BadgesSection from "./BadgesSection";
 import GratitudeGarden from "./GratitudeGarden";
 import DailyPositiveMessage from "./DailyPositiveMessage";
+import WellnessGamesPage from "./WellnessGamesPage";
 
 function Dashboard({ user, onNavigate, onLogout }) {
   const [activeNav, setActiveNav] = useState("dashboard");
+  const [selectedGameId, setSelectedGameId] = useState(null);
   const [currentMood, setCurrentMood] = useState(null);
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [streak, setStreak] = useState(3);
@@ -131,7 +134,10 @@ function Dashboard({ user, onNavigate, onLogout }) {
         desc: "A quick 60-second reset to calm your body.",
         icon: Wind,
         accent: "from-sky-500 to-violet-600",
-        onClick: () => {},
+        onClick: () => {
+          setSelectedGameId("breathing");
+          setActiveNav("games");
+        },
       },
       {
         title: "Meditation",
@@ -145,7 +151,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
         desc: "If you're in crisis, get help immediately.",
         icon: PhoneCall,
         accent: "from-rose-500 to-orange-500",
-        onClick: () => {},
+        onClick: () => setActiveNav("resources"),
       },
       {
         title: "Read Articles",
@@ -155,7 +161,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
         onClick: () => {},
       },
     ],
-    []
+    [setActiveNav, setSelectedGameId]
   );
 
   const overviewStats = useMemo(
@@ -215,6 +221,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
 
             <div className="hidden items-center gap-2 rounded-3xl bg-gradient-to-r from-sky-100/70 via-white to-emerald-100/60 p-1 md:flex">
               <NavButton id="dashboard" icon={LayoutDashboard} label="Dashboard" />
+              <NavButton id="games" icon={Gamepad2} label="Games" />
               <NavButton id="resources" icon={BookOpen} label="Resources" />
               <NavButton id="profile" icon={UserCircle2} label="Profile" />
               <button
@@ -241,6 +248,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
 
           <div className="mt-3 flex items-center justify-between gap-2 rounded-3xl bg-white/60 p-1 shadow-sm ring-1 ring-gray-200/60 md:hidden">
             <NavButton id="dashboard" icon={LayoutDashboard} label="Dashboard" />
+            <NavButton id="games" icon={Gamepad2} label="Games" />
             <NavButton id="resources" icon={BookOpen} label="Resources" />
             <NavButton id="profile" icon={UserCircle2} label="Profile" />
             <button
@@ -329,6 +337,35 @@ function Dashboard({ user, onNavigate, onLogout }) {
                 onMoodSelect={handleMoodSelect}
                 hasCheckedInToday={hasCheckedInToday}
               />
+            </div>
+
+            <div className="mt-8 rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur transition hover:shadow-lg sm:p-8">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow">
+                    <Gamepad2 className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="text-base font-extrabold tracking-tight text-gray-900">Wellness Games</div>
+                    <div className="mt-1 text-sm text-gray-600">Interactive games to reduce stress and build mental resilience.</div>
+                  </div>
+                </div>
+                <div className="hidden rounded-2xl bg-purple-50 px-3 py-1.5 text-xs font-semibold text-purple-700 ring-1 ring-purple-200 sm:inline-flex">
+                  Quick & Fun
+                </div>
+              </div>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm text-gray-600">
+                  Try Serenity Circle Breathing and Transform Your Thoughts games. Quick sessions designed with techniques from Calm and Headspace.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveNav("games")}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 px-5 py-3 text-sm font-semibold text-white shadow hover:from-violet-600 hover:to-purple-700"
+                >
+                  Play Games <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             <div className="mt-8 grid gap-6 lg:grid-cols-3">
@@ -465,9 +502,24 @@ function Dashboard({ user, onNavigate, onLogout }) {
                   <div>
                     <div className="text-sm font-extrabold text-rose-900">In crisis? Get help now</div>
                     <div className="mt-2 text-sm leading-relaxed text-rose-800">
-                      If you are experiencing a mental health emergency, contact local emergency services immediately.
-                      If you are in the US, call or text <span className="font-extrabold">988</span> for the Suicide Crisis Lifeline.
-                      Outside the US, consider your country is national crisis line or emergency number.
+                      If you are in immediate danger, call your local emergency number right now.
+                    </div>
+                    <div className="mt-3 grid gap-2 text-sm text-rose-900 sm:grid-cols-2">
+                      <div className="rounded-xl bg-white/60 px-3 py-2 ring-1 ring-rose-200/70">
+                        US & Canada: <span className="font-extrabold">988</span> (call or text)
+                      </div>
+                      <div className="rounded-xl bg-white/60 px-3 py-2 ring-1 ring-rose-200/70">
+                        UK & ROI: <span className="font-extrabold">Samaritans 116 123</span>
+                      </div>
+                      <div className="rounded-xl bg-white/60 px-3 py-2 ring-1 ring-rose-200/70">
+                        India: <span className="font-extrabold">Tele-MANAS 14416</span> or <span className="font-extrabold">1-800-891-4416</span>
+                      </div>
+                      <div className="rounded-xl bg-white/60 px-3 py-2 ring-1 ring-rose-200/70">
+                        Europe emergency: <span className="font-extrabold">112</span>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-xs text-rose-700">
+                      If these do not match your location, contact your country's national crisis line or nearest hospital emergency department.
                     </div>
                   </div>
                 </div>
@@ -509,6 +561,18 @@ function Dashboard({ user, onNavigate, onLogout }) {
               </div>
             </div>
           </>
+        )}
+
+        {activeNav === "games" && (
+          <WellnessGamesPage
+            initialGame={selectedGameId}
+            onNavigate={(page) => {
+              if (page !== "games") {
+                setSelectedGameId(null);
+              }
+              setActiveNav(page);
+            }}
+          />
         )}
 
         {activeNav === "resources" && (
@@ -555,8 +619,24 @@ function Dashboard({ user, onNavigate, onLogout }) {
                   <div>
                     <div className="text-sm font-extrabold text-rose-900">In crisis? Get help now</div>
                     <div className="mt-2 text-sm leading-relaxed text-rose-800">
-                      If you are experiencing a mental health emergency, contact local emergency services immediately.
-                      If you are in the US, call or text <span className="font-extrabold">988</span>.
+                      If you are in immediate danger, call your local emergency number right now.
+                    </div>
+                    <div className="mt-3 grid gap-2 text-sm text-rose-900 sm:grid-cols-2">
+                      <div className="rounded-xl bg-white/60 px-3 py-2 ring-1 ring-rose-200/70">
+                        US & Canada: <span className="font-extrabold">988</span> (call or text)
+                      </div>
+                      <div className="rounded-xl bg-white/60 px-3 py-2 ring-1 ring-rose-200/70">
+                        UK & ROI: <span className="font-extrabold">Samaritans 116 123</span>
+                      </div>
+                      <div className="rounded-xl bg-white/60 px-3 py-2 ring-1 ring-rose-200/70">
+                        India: <span className="font-extrabold">Tele-MANAS 14416</span> or <span className="font-extrabold">1-800-891-4416</span>
+                      </div>
+                      <div className="rounded-xl bg-white/60 px-3 py-2 ring-1 ring-rose-200/70">
+                        Europe emergency: <span className="font-extrabold">112</span>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-xs text-rose-700">
+                      If these do not match your location, contact your country's national crisis line or nearest hospital emergency department.
                     </div>
                   </div>
                 </div>

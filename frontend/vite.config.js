@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'node:path'
 
 export default defineConfig({
+  cacheDir: path.resolve(process.env.LOCALAPPDATA || process.env.TEMP || '.', 'ugp-vite-cache'),
   plugins: [react()],
   server: {
     port: 3000,
@@ -14,9 +16,5 @@ export default defineConfig({
     fs: {
       strict: false
     }
-  },
-  optimizeDeps: {
-    force: true
-  },
-  cacheDir: './.vite'
+  }
 })

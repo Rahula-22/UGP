@@ -10,10 +10,6 @@ Core capabilities:
 - Mood journaling and wellness progress tracking
 - Gamified wellness elements (badges, gratitude, mini-games)
 
-## Live Demo
-
-- https://frontend-iota-smoky-22.vercel.app/
-
 ## Repository Analysis Snapshot
 
 This README has been aligned to the current codebase (April 2026):

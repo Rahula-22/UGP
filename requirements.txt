@@ -1,38 +1,36 @@
-# Core dependencies - latest stable versions
-langchain
-langchain-community
-langchain-text-splitters
-langchain-core
-langchain-huggingface
+# Core dependencies - pinned for deterministic Railway builds
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+langchain==0.3.27
+langchain-community==0.3.27
+langchain-text-splitters==0.3.9
+langchain-core==0.3.72
 
 # Vector database
-faiss-cpu
+faiss-cpu==1.8.0.post1
 
 # Embeddings
-sentence-transformers
+sentence-transformers==3.0.1
 
 # Document processing
-pypdf
+pypdf==5.0.1
 
 # Dataset processing (parquet)
-pandas
-pyarrow
+pandas==2.2.3
+pyarrow==18.0.0
 
 # LLM - use stable version
 groq==0.9.0
 
 # API Backend
-fastapi
-uvicorn[standard]
-python-multipart
+fastapi==0.115.5
+uvicorn[standard]==0.32.0
+python-multipart==0.0.12
 
 # Additional utilities
-python-dotenv
-pydantic
+python-dotenv==1.0.1
+pydantic==2.9.0
 httpx>=0.27.0
 
-pydantic==2.9.0
 transformers==4.38.0
-torch==2.2.0
-sentencepiece==0.2.0
-accelerate==0.25.0
+torch==2.2.0+cpu

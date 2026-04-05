@@ -2,7 +2,7 @@ import streamlit as st
 import os
 from document_processor import DocumentProcessor
 from chatbot import MentalHealthChatbot
-import config
+import config_runtime as config
 
 # Page configuration
 st.set_page_config(

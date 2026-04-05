@@ -3,7 +3,7 @@ from langchain_core.documents import Document
 from datetime import datetime
 from emotion_detector import EmotionDetector
 from models import VectorDatabase
-import config
+import config_runtime as config
 import os
 
 class MentalHealthChatbot:

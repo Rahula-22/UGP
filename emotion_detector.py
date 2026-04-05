@@ -14,28 +14,22 @@ class EmotionDetector:
     Hybrid emotion detection combining lexicon-based and transformer models
     """
     
-    def __init__(self, model_name="j-hartmann/emotion-english-distilroberta-base"):
+    def __init__(self, model_name="j-hartmann/emotion-english-distilroberta-base", lazy_load: bool = True):
         """
         Initialize the emotion detector with transformer model and lexicon
         
         Args:
             model_name: HuggingFace model for emotion detection
         """
-        print("Loading emotion detection model...")
-        try:
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-            self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
-            self.pipeline = pipeline(
-                "text-classification", 
-                model=self.model, 
-                tokenizer=self.tokenizer,
-                top_k=None,
-                device=-1  # Use CPU
-            )
-            print("✓ Transformer model loaded successfully")
-        except Exception as e:
-            print(f"Warning: Could not load transformer model: {e}")
-            self.pipeline = None
+        self.model_name = model_name
+        self.tokenizer = None
+        self.model = None
+        self.pipeline = None
+        self._model_load_attempted = False
+
+        # Keep startup lightweight in constrained hosting environments.
+        if not lazy_load:
+            self._load_transformer_model()
         
         # Initialize lexicon detector
         self.lexicon = EmotionLexicon()
@@ -53,6 +47,28 @@ class EmotionDetector:
         
         # Confidence threshold for lexicon-only mode
         self.lexicon_confidence_threshold = 0.85
+
+    def _load_transformer_model(self) -> None:
+        """Load the transformer model once; fall back silently to lexicon-only mode on failure."""
+        if self._model_load_attempted:
+            return
+
+        self._model_load_attempted = True
+        print("Loading emotion detection model...")
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+            self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
+            self.pipeline = pipeline(
+                "text-classification",
+                model=self.model,
+                tokenizer=self.tokenizer,
+                top_k=None,
+                device=-1  # Use CPU
+            )
+            print("✓ Transformer model loaded successfully")
+        except Exception as e:
+            print(f"Warning: Could not load transformer model: {e}")
+            self.pipeline = None
     
     def detect_emotion(self, text: str) -> Dict:
         """
@@ -81,9 +97,13 @@ class EmotionDetector:
         # Stage 1: Lexicon-based detection (fast)
         lexicon_scores = self.lexicon.analyze(text)
         max_lexicon_score = max(lexicon_scores.values())
+
+        # Load transformer only when needed so API startup stays fast/reliable.
+        if self.pipeline is None and not self._model_load_attempted:
+            self._load_transformer_model()
         
         # If high confidence from lexicon, return early (speed optimization)
-        if max_lexicon_score > self.lexicon_confidence_threshold and self.pipeline:
+        if max_lexicon_score > self.lexicon_confidence_threshold:
             primary_emotion = max(lexicon_scores, key=lexicon_scores.get)
             intensity = self._calculate_intensity(text, lexicon_scores)
             return {

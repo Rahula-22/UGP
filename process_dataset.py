@@ -15,7 +15,7 @@ import pandas as pd
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from models import VectorDatabase
-import config
+import config_runtime as config
 
 DATASET_PATH = "data2/0000.parquet"
 

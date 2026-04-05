@@ -5,7 +5,7 @@ Run this to create the vectorstore without starting the web interface
 
 from document_processor import DocumentProcessor
 from models import VectorDatabase
-import config
+import config_runtime as config
 
 def main():
     print("=" * 50)

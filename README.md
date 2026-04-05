@@ -19,7 +19,6 @@ Backend is built with FastAPI and LangChain. Frontend is built with React and Vi
 - Mood journal history and wellness stats tracking
 - Badges and gratitude entries
 - Emotion detection endpoint and emotion history
-- PDF upload and knowledge base processing endpoints
 - Optional conversation-dataset ingestion from parquet data
 
 ## Tech Stack
@@ -146,13 +145,21 @@ Open:
 
 - Backend
   - Docker: backend.dockerfile
-  - Render: render.yaml
   - Railway: railway.json
 
 - Frontend
   - Vercel config: frontend/vercel.json
 
 Set production environment variables (especially GROQ_API_KEY and frontend API base URL) in your hosting platform.
+
+Recommended production variables:
+
+- Backend:
+  - FRONTEND_URL=https://your-frontend-domain.com
+  - FRONTEND_URLS=https://your-frontend-domain.com,https://your-secondary-domain.com
+  - CORS_ORIGIN_REGEX=https://.*\.(vercel\.app|netlify\.app|onrender\.com)$
+- Frontend:
+  - VITE_API_BASE_URL=https://your-backend-domain.com
 
 ## Optional Legacy UI
 

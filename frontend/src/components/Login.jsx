@@ -19,6 +19,9 @@ function Login({ onLoginSuccess, defaultIsRegister = false, onBack }) {
     setError('');
     setLoading(true);
 
+    const username = formData.username.trim();
+    const email = formData.email.trim().toLowerCase();
+
     try {
       if (isRegister) {
         if (formData.password !== formData.confirmPassword) {
@@ -28,13 +31,13 @@ function Login({ onLoginSuccess, defaultIsRegister = false, onBack }) {
         }
 
         await axios.post(`${API_BASE}/api/register`, {
-          username: formData.username,
-          email: formData.email,
+          username,
+          email,
           password: formData.password
         });
 
         const loginResponse = await axios.post(`${API_BASE}/api/login`, {
-          username: formData.username,
+          username,
           password: formData.password
         });
 
@@ -43,7 +46,7 @@ function Login({ onLoginSuccess, defaultIsRegister = false, onBack }) {
         onLoginSuccess(loginResponse.data.user, loginResponse.data.session_token);
       } else {
         const response = await axios.post(`${API_BASE}/api/login`, {
-          username: formData.username,
+          username,
           password: formData.password
         });
 
@@ -52,7 +55,19 @@ function Login({ onLoginSuccess, defaultIsRegister = false, onBack }) {
         onLoginSuccess(response.data.user, response.data.session_token);
       }
     } catch (error) {
-      const message = error.response?.data?.detail || error.message || 'An error occurred';
+      let message = 'An error occurred';
+      const detail = error.response?.data?.detail;
+
+      if (Array.isArray(detail)) {
+        message = detail.map((item) => item.msg).join(', ');
+      } else if (typeof detail === 'string' && detail.trim()) {
+        message = detail;
+      } else if (!error.response) {
+        message = 'Cannot reach the server. Check backend URL/CORS settings for the live site.';
+      } else if (error.message) {
+        message = error.message;
+      }
+
       setError(message);
     } finally {
       setLoading(false);

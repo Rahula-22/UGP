@@ -13,7 +13,7 @@ import os
 import shutil
 from chatbot import MentalHealthChatbot
 from document_processor import DocumentProcessor
-import config
+import config_runtime as config
 from database import Database
 import json
 
@@ -25,7 +25,7 @@ app = FastAPI(
 )
 
 # Enable CORS for frontend communication
-# Support both development (localhost) and production (Vercel) URLs
+# Supports local dev and multiple production domains.
 cors_origins = [
     "http://localhost:3000",      # React dev server (Create React App)
     "http://localhost:5173",      # Vite dev server
@@ -33,14 +33,31 @@ cors_origins = [
     "http://127.0.0.1:5173",
 ]
 
-# Add production URLs from environment if set
-if os.getenv("FRONTEND_URL"):
-    cors_origins.append(os.getenv("FRONTEND_URL"))
+frontend_url = os.getenv("FRONTEND_URL", "").strip()
+if frontend_url:
+    cors_origins.append(frontend_url)
+
+# Optional comma-separated list for production frontends.
+frontend_urls = os.getenv("FRONTEND_URLS", "").strip()
+if frontend_urls:
+    cors_origins.extend([
+        url.strip()
+        for url in frontend_urls.split(",")
+        if url.strip()
+    ])
+
+# Preserve order while removing duplicates.
+cors_origins = list(dict.fromkeys(cors_origins))
+
+cors_origin_regex = os.getenv(
+    "CORS_ORIGIN_REGEX",
+    r"https://.*\.(vercel\.app|netlify\.app|onrender\.com)$"
+)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origin_regex=cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

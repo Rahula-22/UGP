@@ -1,7 +1,7 @@
 import os
 from typing import List, Optional
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
 class VectorDatabase:
@@ -18,14 +18,20 @@ class VectorDatabase:
             persist_directory: Directory to save/load the vector database
         """
         self.persist_directory = persist_directory
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2",
-            model_kwargs={'device': 'cpu'}
-        )
+        self.embeddings = None
         self.vectorstore: Optional[FAISS] = None
         
         # Create directory if it doesn't exist
         os.makedirs(persist_directory, exist_ok=True)
+
+    def _get_embeddings(self) -> HuggingFaceEmbeddings:
+        """Load embeddings model lazily so API startup stays fast and reliable."""
+        if self.embeddings is None:
+            self.embeddings = HuggingFaceEmbeddings(
+                model_name="sentence-transformers/all-MiniLM-L6-v2",
+                model_kwargs={'device': 'cpu'}
+            )
+        return self.embeddings
         
     def create_vectorstore(self, documents: List[Document]) -> None:
         """
@@ -38,7 +44,8 @@ class VectorDatabase:
             raise ValueError("No documents provided to create vectorstore")
         
         print(f"Creating vectorstore with {len(documents)} documents...")
-        self.vectorstore = FAISS.from_documents(documents, self.embeddings)
+        embeddings = self._get_embeddings()
+        self.vectorstore = FAISS.from_documents(documents, embeddings)
         self.save_vectorstore()
         print("Vectorstore created and saved successfully!")
         
@@ -71,9 +78,10 @@ class VectorDatabase:
         
         if os.path.exists(index_path):
             print("Loading existing vectorstore...")
+            embeddings = self._get_embeddings()
             self.vectorstore = FAISS.load_local(
                 self.persist_directory, 
-                self.embeddings,
+                embeddings,
                 allow_dangerous_deserialization=True
             )
             print("Vectorstore loaded successfully!")

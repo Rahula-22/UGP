@@ -25,9 +25,21 @@ app = FastAPI(
 )
 
 # Enable CORS for frontend communication
+# Support both development (localhost) and production (Vercel) URLs
+cors_origins = [
+    "http://localhost:3000",      # React dev server (Create React App)
+    "http://localhost:5173",      # Vite dev server
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+]
+
+# Add production URLs from environment if set
+if os.getenv("FRONTEND_URL"):
+    cors_origins.append(os.getenv("FRONTEND_URL"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # React dev servers
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

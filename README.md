@@ -67,6 +67,19 @@ To run the project locally, follow these steps:
    - Navigate to `http://localhost:3000` for the frontend
    - The backend API will be running at `http://localhost:8000`
 
+## 🌐 Deploy Online (Get a Single URL)
+
+To deploy your app online and get a single URL to share:
+
+1. **📖 Quick Start**: Read [QUICK_START_DEPLOYMENT.md](QUICK_START_DEPLOYMENT.md) (5 minutes)
+2. **📚 Detailed Guide**: Read [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for troubleshooting
+
+**Deployment Architecture**:
+- Frontend: **Vercel** (your public URL)
+- Backend: **Render** (free API server)
+
+After deployment, you'll have a single URL like: `https://your-app.vercel.app` 🚀
+
 ## 📄 Usage
 
 1. **Upload PDF documents**

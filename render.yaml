@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: mental-health-ai-companion-api
+    runtime: python
+    pythonVersion: 3.9
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port 8000
+    envVars:
+      - key: GROQ_API_KEY
+        description: Your Groq API Key from https://console.groq.com
+        value: ""  # You'll set this in Render dashboard
+      - key: PDF_DIRECTORY
+        value: data
+      - key: VECTORSTORE_DIRECTORY
+        value: data/vectorstore

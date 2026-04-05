@@ -29,7 +29,44 @@ function Chat({ sessionToken, onBack }) {
   );
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
-  const finalTranscriptRef = useRef('');
+
+  const cleanSpeechChunk = (text) => text.replace(/\s+/g, ' ').trim();
+
+  const mergeSegmentsByOverlap = (segments) => {
+    if (!segments.length) return '';
+
+    let merged = segments[0];
+
+    for (let i = 1; i < segments.length; i++) {
+      const next = segments[i];
+      const mergedWords = merged.split(' ');
+      const nextWords = next.split(' ');
+      const maxOverlap = Math.min(mergedWords.length, nextWords.length);
+      let overlap = 0;
+
+      for (let size = maxOverlap; size > 0; size--) {
+        const mergedTail = mergedWords.slice(-size).join(' ').toLowerCase();
+        const nextHead = nextWords.slice(0, size).join(' ').toLowerCase();
+
+        if (mergedTail === nextHead) {
+          overlap = size;
+          break;
+        }
+      }
+
+      if (overlap === nextWords.length) {
+        continue;
+      }
+
+      if (overlap > 0) {
+        merged = `${merged} ${nextWords.slice(overlap).join(' ')}`.trim();
+      } else if (!merged.toLowerCase().includes(next.toLowerCase())) {
+        merged = `${merged} ${next}`.trim();
+      }
+    }
+
+    return cleanSpeechChunk(merged);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -50,25 +87,20 @@ function Chat({ sessionToken, onBack }) {
 
     recognition.onstart = () => {
       setIsListening(true);
-      finalTranscriptRef.current = '';
     };
 
     recognition.onresult = (event) => {
-      let interimTranscript = '';
+      const segments = [];
 
-      // Process only new results since last event
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscriptRef.current += transcript + ' ';
-        } else {
-          interimTranscript += transcript;
+      // Rebuild transcript from current recognition results and merge overlaps.
+      for (let i = 0; i < event.results.length; i++) {
+        const transcript = cleanSpeechChunk(event.results[i][0].transcript);
+        if (transcript) {
+          segments.push(transcript);
         }
       }
 
-      // Update input with final transcript + current interim
-      const displayText = finalTranscriptRef.current + interimTranscript;
-      setInput(displayText.trim());
+      setInput(mergeSegmentsByOverlap(segments));
     };
 
     recognition.onerror = (event) => {

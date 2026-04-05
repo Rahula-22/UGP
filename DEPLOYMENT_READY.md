@@ -74,7 +74,7 @@ This is the fastest way to get your app online:
 ### 4️⃣ You'll Get Back a Single URL! 🎉
 After deployment:
 - **Frontend URL**: `https://your-app.vercel.app` (your public link)
-- **Backend URL**: `https://your-api.onrender.com` (auto-connected)
+- **Backend URL**: `https://your-project.railway.app` (auto-connected)
 
 ### 5️⃣ Update Your GitHub README
 Add this to your README.md:
@@ -93,7 +93,7 @@ Try the mental health companion chatbot online!
 | Component | Platform | Cost | URL |
 |-----------|----------|------|-----|
 | **Frontend (React)** | Vercel | FREE ✅ | `https://your-app.vercel.app` |
-| **Backend (FastAPI)** | Render | FREE ✅ | Auto-connected |
+| **Backend (FastAPI)** | Railway | FREE ✅ | `https://your-project.railway.app` |
 | **Vector DB** | Local | N/A | Embedded in backend |
 
 ---
@@ -112,10 +112,10 @@ Try the mental health companion chatbot online!
 ## 🆘 Common Issues & Solutions
 
 ### "Backend not responding"
-→ Service is still deploying. Wait 5-10 minutes, then refresh.
+→ Service is still deploying. Wait 3-5 minutes, then refresh.
 
 ### "CORS error"
-→ Check `VITE_API_BASE_URL` in Vercel environment variables matches your Render URL.
+→ Check `VITE_API_BASE_URL` in Vercel environment variables matches your Railway URL.
 
 ### "Cannot find module"
 → Check Render logs. All dependencies in `requirements.txt`?
@@ -161,7 +161,7 @@ Share this on GitHub, social media, resume, portfolio, etc.
 
 1. **Test locally first** before deploying
 2. **Keep your Groq API key private** - use environment variables
-3. **Render free tier is slow** (15-min inactivity timeout) - consider upgrading ($7/month)
+3. **Railway is always-on** - no cold start waits! ✅
 4. **Vercel is super fast** and stays on (recommended!)
 
 ---

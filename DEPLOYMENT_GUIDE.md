@@ -9,7 +9,7 @@ User Browser
     ↓
 Vercel Frontend (React) ← Single Public URL
     ↓
-Render Backend (FastAPI)
+Railway Backend (FastAPI)
     ↓
 FAISS Vector DB + Groq API
 ```
@@ -17,7 +17,7 @@ FAISS Vector DB + Groq API
 ## 🔧 Prerequisites
 
 - **Vercel Account** (free at https://vercel.com)
-- **Render Account** (free at https://render.com)
+- **Railway Account** (free at https://railway.app)
 - **GitHub Account** (to connect your repository)
 - **Groq API Key** (from https://console.groq.com)
 
@@ -47,30 +47,25 @@ FAISS Vector DB + Groq API
 
 ---
 
-## 🚀 Step 2: Deploy Backend on Render
+## 🚀 Step 2: Deploy Backend on Railway
 
-### Option A: Using Git (Recommended)
+### Quick Setup (2 minutes)
 
-1. Go to [render.com](https://render.com) and sign up
-2. Click **"New +"** → **"Web Service"**
-3. Connect your GitHub repository
-4. Fill in the details:
-   - **Name**: `mental-health-ai-api`
-   - **Environment**: Python 3
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn api:app --host 0.0.0.0 --port 8000`
-5. **Environment Variables** (click "Advanced"):
-   - `GROQ_API_KEY` = your_groq_api_key_here
-6. Click **"Create Web Service"**
-
-### Option B: Using render.yaml (Skip if using Option A)
-
-The `render.yaml` file is already configured. Just connect your repo to Render and it will auto-deploy.
+1. Go to [railway.app](https://railway.app) and **Sign up with GitHub**
+2. Click **"Create New Project"** → **"Deploy from GitHub"**
+3. Select your GitHub repository containing the Ugp code
+4. Railway auto-detects Python and creates the service
+5. Go to your project → **Settings** → **Variables**:
+   - Add `GROQ_API_KEY = your_groq_api_key_here`
+   - Add `PYTHON_VERSION = 3.9`
+6. ✅ **Wait 3-5 minutes** for the build to complete
+7. Go to **Deployments** tab to see your live Railway URL
+8. ✅ Test it: Open your Railway URL in browser
 
 ### After Deployment:
-- ✅ Wait 5-10 minutes for deployment to complete
-- ✅ Note your Render URL: `https://mental-health-ai-api.onrender.com`
-- ✅ Test it: `https://mental-health-ai-api.onrender.com/docs`
+- ✅ Your Railway URL will look like: `https://your-project.railway.app`
+- ✅ Test the API: `https://your-project.railway.app/docs`
+- ✅ Keep this URL for the next step
 
 ---
 
@@ -87,9 +82,9 @@ The `render.yaml` file is already configured. Just connect your repo to Render a
 5. **Environment Variables** (click "Add" next to Environment Variables):
    ```
    Variable Name: VITE_API_BASE_URL
-   Value: https://mental-health-ai-api.onrender.com/api
+   Value: https://your-project.railway.app/api
    ```
-   (Replace the URL with your actual Render backend URL)
+   (Replace the URL with your actual Railway backend URL from Step 2)
 6. Click **"Deploy"**
 
 ### After Deployment:
@@ -107,7 +102,7 @@ Update your `README.md` with the live URL:
 
 **Access the app here**: [https://your-project.vercel.app](https://your-project.vercel.app)
 
-> The app is hosted on Vercel (Frontend) and Render (Backend)
+> The app is hosted on Vercel (Frontend) and Railway (Backend)
 ```
 
 ---
@@ -145,8 +140,8 @@ Update your `README.md` with the live URL:
 
 ## 📊 Monitoring & Scaling
 
-### Render Dashboard:
-- View API logs: Render → Dashboard → Select your service
+### Railway Dashboard:
+- View API logs: Railway → Dashboard → Select your project
 - Monitor usage and performance
 
 ### Vercel Dashboard:
@@ -160,9 +155,9 @@ Update your `README.md` with the live URL:
 | Service | Free Tier | Limits |
 |---------|-----------|--------|
 | **Vercel** | ✅ Yes | 100GB bandwidth/month |
-| **Render** | ✅ Yes (0.5 CPU, 512MB RAM) | Spins down after 15 min inactivity |
+| **Railway** | ✅ Yes ($5/month credit) | Always-on, no cold starts |
 
-> **Note**: Render's free tier may have cold starts (5-10 sec). Upgrade to paid for always-on servers.
+> **Note**: Railway free tier is great! You get $5/month credit which usually covers small apps. No cold start issues!
 
 ---
 
@@ -185,11 +180,11 @@ After initial deployment, any push to your `main` branch will **auto-deploy**:
 
 | Issue | Solution |
 |-------|----------|
-| **Deployment failed** | Check build logs in Vercel/Render dashboard |
-| **App loads but can't use features** | Verify `VITE_API_BASE_URL` environment variable |
+| **Deployment failed** | Check build logs in Railway/Vercel dashboard |
+| **App loads but can't use features** | Verify `VITE_API_BASE_URL` environment variable matches Railway URL |
 | **CORS errors** | Update `CORSMiddleware` in `api.py` with correct Vercel URL |
-| **PDFs not loading** | Ensure `data/vectorstore/` exists in Render filesystem |
-| **Groq API errors** | Verify `GROQ_API_KEY` is set correctly in Render environment |
+| **PDFs not loading** | Ensure `data/vectorstore/` exists in Railway filesystem |
+| **Groq API errors** | Verify `GROQ_API_KEY` is set correctly in Railway environment |
 
 ---
 
@@ -197,7 +192,7 @@ After initial deployment, any push to your `main` branch will **auto-deploy**:
 
 - **Groq Console**: https://console.groq.com
 - **Vercel Docs**: https://vercel.com/docs
-- **Render Docs**: https://render.com/docs
+- **Railway Docs**: https://docs.railway.app
 - **FastAPI CORS**: https://fastapi.tiangolo.com/tutorial/cors/
 
 ---

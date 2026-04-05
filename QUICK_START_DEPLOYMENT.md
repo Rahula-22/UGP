@@ -8,18 +8,18 @@
 
 ---
 
-## Backend Deployment (Render) - 5 minutes
+## Backend Deployment (Railway) - 5 minutes
 
-1. [ ] Go to https://render.com/dashboard
-2. [ ] Click **"New +"** → **"Web Service"**
-3. [ ] Select your GitHub repository
-4. [ ] Enter name: `mental-health-ai-api`
-5. [ ] **Build Command**: `pip install -r requirements.txt`
-6. [ ] **Start Command**: `uvicorn api:app --host 0.0.0.0 --port 8000`
-7. [ ] **Add Environment Variable**: `GROQ_API_KEY = [your-key]`
-8. [ ] Click **"Create Web Service"**
-9. [ ] ✅ **Wait 5-10 minutes** for deployment to complete
-10. [ ] Note your Render URL: `https://mental-health-ai-api.onrender.com`
+1. [ ] Go to https://railway.app and sign up with GitHub
+2. [ ] Click **"Create New Project"** → **"Deploy from GitHub"**
+3. [ ] Select your repository with the Ugp code
+4. [ ] Railway auto-detects Python - click **"Deploy Now"**
+5. [ ] Go to **Settings** → **Variables**:
+   - Add: `GROQ_API_KEY = [your-key]`
+   - Add: `PYTHON_VERSION = 3.9`
+6. [ ] ✅ **Wait 3-5 minutes** for deployment to complete
+7. [ ] Go to **Deployments** tab to find your Railway URL
+8. [ ] Note your Railway URL: `https://your-project.railway.app`
 
 ---
 
@@ -32,9 +32,9 @@
 5. [ ] **Root Directory**: `./frontend`
 6. [ ] **Add Environment Variable**:
    ```
-   VITE_API_BASE_URL = https://your-render-url.onrender.com/api
+   VITE_API_BASE_URL = https://your-project.railway.app/api
    ```
-   (Replace with your actual Render URL from Step 10 above)
+   (Replace with your actual Railway URL from step 8 above)
 7. [ ] Click **"Deploy"**
 8. [ ] ✅ **Your Vercel URL is ready!** (usually like `https://project-name.vercel.app`)
 
@@ -58,14 +58,14 @@ Update your `README.md`:
 
 👉 **[Open App Here](https://your-project.vercel.app)** 👈
 
-Deployed on [Vercel](https://vercel.com) (Frontend) + [Render](https://render.com) (Backend)
+Deployed on [Vercel](https://vercel.com) (Frontend) + [Railway](https://railway.app) (Backend)
 ```
 
 ---
 
 ## 🆘 If Something Goes Wrong
 
-1. **Check Render logs**: Render Dashboard → Select service → View logs
+1. **Check Railway logs**: Railway Dashboard → Select project → Deployments → View logs
 2. **Check Vercel logs**: Vercel Dashboard → Select project → Deployments → View logs
 3. **See detailed guide**: Read `DEPLOYMENT_GUIDE.md` in the root directory
 
@@ -73,10 +73,8 @@ Deployed on [Vercel](https://vercel.com) (Frontend) + [Render](https://render.co
 
 ## 💡 Pro Tips
 
-- Render free tier may be slow (cold start) after 15 minutes of inactivity
-- To keep Render warm, you can:
-  - Upgrade to paid plan (~$7/month)
-  - Set a cron job to ping your API every 10 minutes
+- Railway free tier is generous and stays always-on ✅
+- No cold start issues unlike some platforms
 - Test locally first before deploying:
   ```bash
   uvicorn api:app --reload  # Terminal 1

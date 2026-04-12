@@ -144,7 +144,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
         desc: "Short sessions to ease stress and improve sleep.",
         icon: Headphones,
         accent: "from-emerald-500 to-teal-600",
-        onClick: () => {},
+        onClick: () => window.open("https://www.youtube.com/watch?v=H_uc-uQ3Nkc", "_blank", "noopener"),
       },
       {
         title: "Emergency Helpline",
@@ -158,7 +158,7 @@ function Dashboard({ user, onNavigate, onLogout }) {
         desc: "Practical guides for anxiety, sleep, and habits.",
         icon: Newspaper,
         accent: "from-violet-500 to-fuchsia-600",
-        onClick: () => {},
+        onClick: () => window.open("https://www.iitk.ac.in/counsel/blog.php", "_blank", "noopener"),
       },
     ],
     [setActiveNav, setSelectedGameId]
@@ -494,36 +494,6 @@ function Dashboard({ user, onNavigate, onLogout }) {
                 })}
               </div>
 
-              <div className="mt-6 rounded-3xl border border-rose-200 bg-rose-50/70 p-6 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-500 text-white shadow">
-                    <PhoneCall className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-extrabold text-rose-900">In crisis? Get help now</div>
-                    <div className="mt-2 text-sm leading-relaxed text-rose-800">
-                      If you are in immediate danger, call your local emergency number right now.
-                    </div>
-                    <div className="mt-3 grid gap-2 text-sm text-rose-900 sm:grid-cols-2">
-                      <div className="rounded-xl bg-white/60 px-3 py-2 ring-1 ring-rose-200/70">
-                        US & Canada: <span className="font-extrabold">988</span> (call or text)
-                      </div>
-                      <div className="rounded-xl bg-white/60 px-3 py-2 ring-1 ring-rose-200/70">
-                        UK & ROI: <span className="font-extrabold">Samaritans 116 123</span>
-                      </div>
-                      <div className="rounded-xl bg-white/60 px-3 py-2 ring-1 ring-rose-200/70">
-                        India: <span className="font-extrabold">Tele-MANAS 14416</span> or <span className="font-extrabold">1-800-891-4416</span>
-                      </div>
-                      <div className="rounded-xl bg-white/60 px-3 py-2 ring-1 ring-rose-200/70">
-                        Europe emergency: <span className="font-extrabold">112</span>
-                      </div>
-                    </div>
-                    <div className="mt-3 text-xs text-rose-700">
-                      If these do not match your location, contact your country's national crisis line or nearest hospital emergency department.
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div className="mt-8 grid gap-6 lg:grid-cols-3">

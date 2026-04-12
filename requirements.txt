@@ -18,6 +18,7 @@ pypdf==5.0.1
 # Dataset processing (parquet)
 pandas==2.2.3
 pyarrow==18.0.0
+scikit-learn==1.5.2
 
 # LLM - use stable version
 groq==0.9.0

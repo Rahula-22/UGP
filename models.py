@@ -3,6 +3,9 @@ from typing import List, Optional
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+import joblib
 
 class VectorDatabase:
     """
@@ -122,3 +125,69 @@ class VectorDatabase:
                 if os.path.isfile(file_path):
                     os.remove(file_path)
         print("Vectorstore cleared!")
+
+
+class MLModel:
+    
+    def __init__(self, data_path: str = "data2/0000.parquet", model_path: str = "data/model.pkl"):
+        """
+        Initialize the ML model.
+        
+        Args:
+            data_path: Path to the Parquet dataset
+            model_path: Path to save/load the trained model
+        """
+        self.data_path = data_path
+        self.model_path = model_path
+        self.model = None
+        
+    def load_data(self) -> pd.DataFrame:
+        """Load the dataset from Parquet file."""
+        return pd.read_parquet(self.data_path)
+    
+    def preprocess_data(self, df: pd.DataFrame) -> tuple:
+        """Preprocess data to extract features and target."""
+        # Feature: length of context
+        X = df['Context'].str.len().values.reshape(-1, 1)
+        # Target: length of response
+        y = df['Response'].str.len().values
+        return X, y
+    
+    def train_model(self) -> None:
+        """Train the linear regression model."""
+        df = self.load_data()
+        X, y = self.preprocess_data(df)
+        
+        self.model = LinearRegression()
+        self.model.fit(X, y)
+        
+        # Save the model
+        os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
+        joblib.dump(self.model, self.model_path)
+        print("ML model trained and saved!")
+    
+    def load_model(self) -> bool:
+        """Load the trained model from disk."""
+        if os.path.exists(self.model_path):
+            self.model = joblib.load(self.model_path)
+            print("ML model loaded!")
+            return True
+        return False
+    
+    def predict_response_length(self, context: str) -> float:
+        """
+        Predict the response length based on context length.
+        
+        Args:
+            context: The input context text
+            
+        Returns:
+            Predicted response length
+        """
+        if self.model is None:
+            if not self.load_model():
+                self.train_model()
+        
+        context_length = len(context)
+        prediction = self.model.predict([[context_length]])[0]
+        return max(0, prediction)  # Ensure non-negative

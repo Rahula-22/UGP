@@ -75,6 +75,7 @@ class ChatRequest(BaseModel):
     message: str
     api_key: Optional[str] = None
     language: Optional[str] = 'English'
+    session_id: Optional[int] = None
 
 class ChatResponse(BaseModel):
     response: str
@@ -362,19 +363,24 @@ async def get_assessments(session_token: str):
 async def chat_with_auth(request: ChatRequest, session_token: str):
     """Chat with authentication"""
     user = db.verify_session(session_token)
-    
+
     if not user:
         raise HTTPException(status_code=401, detail="Invalid session")
-    
+
+    # Create or get session
+    session_id = request.session_id
+    if not session_id:
+        session_id = db.create_chat_session(user['id'])
+
     # Use existing chat logic
     if not chatbot.groq_client and config.GROQ_API_KEY:
         chatbot.set_groq_api_key(config.GROQ_API_KEY)
-    
+
     response, sources, emotion_data = chatbot.chat(request.message, language=request.language or 'English')
 
-    # Save to database
-    db.save_chat_message(user['id'], request.message, response)
-    
+    # Save to database with session_id
+    chat_id = db.save_chat_message(user['id'], session_id, request.message, response)
+
     # Format sources
     formatted_sources = []
     for doc in sources:
@@ -383,18 +389,90 @@ async def chat_with_auth(request: ChatRequest, session_token: str):
             "page": doc.metadata.get('page', 'N/A'),
             "content": doc.page_content[:300] + "..."
         })
-    
-    return ChatResponse(response=response, sources=formatted_sources)
+
+    return {
+        "response": response,
+        "sources": formatted_sources,
+        "chat_id": chat_id,
+        "session_id": session_id
+    }
+
+@app.post("/api/create-session")
+async def create_session(session_token: str, title: str = None):
+    """Create a new chat session"""
+    user = db.verify_session(session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        session_id = db.create_chat_session(user['id'], title)
+        return {"success": True, "session_id": session_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/chat-sessions/{session_token}")
+async def get_chat_sessions(session_token: str, limit: int = 30):
+    """Get a user's chat sessions"""
+    user = db.verify_session(session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        sessions = db.get_chat_sessions(user['id'], limit=limit)
+        return {"sessions": sessions}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/session-messages/{session_token}/{session_id}")
+async def get_session_messages(session_token: str, session_id: int):
+    """Get all messages in a specific chat session"""
+    user = db.verify_session(session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        messages = db.get_session_messages(user['id'], session_id)
+        return {"messages": messages}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/chat-sessions/{session_token}/{session_id}")
+async def delete_chat_session(session_token: str, session_id: int):
+    """Delete a chat session and all its messages"""
+    user = db.verify_session(session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        success = db.delete_chat_session(user['id'], session_id)
+        if success:
+            return {"success": True, "message": "Chat session deleted successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Chat session not found or unauthorized")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/chat-history/{session_token}")
 async def get_chat_history(session_token: str, limit: int = 30):
-    """Get a user's previous chat messages"""
+    """Get a user's previous chat messages (sessions)"""
     user = db.verify_session(session_token)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid session")
     try:
         history = db.get_chat_history(user['id'], limit=limit)
         return {"history": history}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/chat-history/{session_token}/{chat_id}")
+async def delete_chat_message(session_token: str, chat_id: int):
+    """Delete a specific chat message from history"""
+    user = db.verify_session(session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        success = db.delete_chat_message(user['id'], chat_id)
+        if success:
+            return {"success": True, "message": "Chat message deleted successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Chat message not found or unauthorized")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

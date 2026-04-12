@@ -47,7 +47,7 @@ class Database:
         """Initialize database tables"""
         conn = self.get_connection()
         cursor = conn.cursor()
-        
+
         # Users table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -59,7 +59,7 @@ class Database:
                 last_login TIMESTAMP
             )
         """)
-        
+
         # Sessions table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS sessions (
@@ -70,7 +70,7 @@ class Database:
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         """)
-        
+
         # Mental health assessments table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS assessments (
@@ -83,18 +83,94 @@ class Database:
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         """)
-        
-        # Chat history table
+
+        # Chat sessions table
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS chat_history (
+            CREATE TABLE IF NOT EXISTS chat_sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
-                message TEXT NOT NULL,
-                response TEXT NOT NULL,
+                title TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         """)
+
+        # Chat history table (now links to sessions)
+        # First, check if we need to migrate from old schema
+        cursor.execute("PRAGMA table_info(chat_history)")
+        columns = [col[1] for col in cursor.fetchall()]
+
+        if 'session_id' not in columns:
+            # Migrate old chat_history table to new schema
+            try:
+                # Rename old table
+                cursor.execute("ALTER TABLE chat_history RENAME TO chat_history_old")
+
+                # Create new table with session_id
+                cursor.execute("""
+                    CREATE TABLE chat_history (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        session_id INTEGER NOT NULL,
+                        message TEXT NOT NULL,
+                        response TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (id),
+                        FOREIGN KEY (session_id) REFERENCES chat_sessions (id) ON DELETE CASCADE
+                    )
+                """)
+
+                # Migrate data: create a default session for each user and migrate their messages
+                cursor.execute("SELECT DISTINCT user_id FROM chat_history_old")
+                users = cursor.fetchall()
+
+                for (user_id,) in users:
+                    # Create a default session for this user
+                    cursor.execute(
+                        "INSERT INTO chat_sessions (user_id, title) VALUES (?, ?)",
+                        (user_id, "Previous Conversations")
+                    )
+                    session_id = cursor.lastrowid
+
+                    # Migrate messages to this session
+                    cursor.execute(
+                        "INSERT INTO chat_history (id, user_id, session_id, message, response, created_at) SELECT id, user_id, ?, message, response, created_at FROM chat_history_old WHERE user_id = ?",
+                        (session_id, user_id)
+                    )
+
+                # Drop old table
+                cursor.execute("DROP TABLE chat_history_old")
+                print("Chat history table migrated successfully")
+            except Exception as e:
+                print(f"Error migrating chat_history: {e}")
+                # If migration fails, create fresh table
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS chat_history (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        session_id INTEGER NOT NULL,
+                        message TEXT NOT NULL,
+                        response TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users (id),
+                        FOREIGN KEY (session_id) REFERENCES chat_sessions (id) ON DELETE CASCADE
+                    )
+                """)
+        else:
+            # Table already has session_id, just ensure it exists
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS chat_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    session_id INTEGER NOT NULL,
+                    message TEXT NOT NULL,
+                    response TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users (id),
+                    FOREIGN KEY (session_id) REFERENCES chat_sessions (id) ON DELETE CASCADE
+                )
+            """)
 
         # Mood journal table
         cursor.execute("""
@@ -275,29 +351,118 @@ class Database:
         conn.close()
         return assessments
     
-    def save_chat_message(self, user_id: int, message: str, response: str):
-        """Save chat message"""
+    def save_chat_message(self, user_id: int, session_id: int, message: str, response: str) -> int:
+        """Save chat message to a session and return the message id"""
         conn = self.get_connection()
         cursor = conn.cursor()
 
         cursor.execute(
-            "INSERT INTO chat_history (user_id, message, response) VALUES (?, ?, ?)",
-            (user_id, message, response)
+            "INSERT INTO chat_history (user_id, session_id, message, response) VALUES (?, ?, ?, ?)",
+            (user_id, session_id, message, response)
+        )
+        conn.commit()
+        chat_id = cursor.lastrowid
+
+        # Update session's updated_at timestamp
+        cursor.execute(
+            "UPDATE chat_sessions SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (session_id,)
         )
         conn.commit()
         conn.close()
+        return chat_id
 
-    def get_chat_history(self, user_id: int, limit: int = 30) -> List[Dict]:
-        """Get recent chat history for a user"""
+    def create_chat_session(self, user_id: int, title: str = None) -> int:
+        """Create a new chat session and return the session id"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        if title is None:
+            title = f"Chat - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+
+        cursor.execute(
+            "INSERT INTO chat_sessions (user_id, title) VALUES (?, ?)",
+            (user_id, title)
+        )
+        conn.commit()
+        session_id = cursor.lastrowid
+        conn.close()
+        return session_id
+
+    def get_chat_sessions(self, user_id: int, limit: int = 30) -> List[Dict]:
+        """Get recent chat sessions for a user"""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT * FROM chat_history WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
+            "SELECT * FROM chat_sessions WHERE user_id = ? ORDER BY updated_at DESC LIMIT ?",
             (user_id, limit)
         )
-        rows = [dict(row) for row in cursor.fetchall()]
+        sessions = [dict(row) for row in cursor.fetchall()]
         conn.close()
-        return rows
+        return sessions
+
+    def get_session_messages(self, user_id: int, session_id: int) -> List[Dict]:
+        """Get all messages in a chatSession"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM chat_history WHERE user_id = ? AND session_id = ? ORDER BY created_at ASC",
+            (user_id, session_id)
+        )
+        messages = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return messages
+
+    def update_session_title(self, user_id: int, session_id: int, title: str) -> bool:
+        """Update a session's title"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE chat_sessions SET title = ? WHERE id = ? AND user_id = ?",
+            (title, session_id, user_id)
+        )
+        conn.commit()
+        success = cursor.rowcount > 0
+        conn.close()
+        return success
+
+    def delete_chat_session(self, user_id: int, session_id: int) -> bool:
+        """Delete a chat session and all its messages"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "DELETE FROM chat_sessions WHERE id = ? AND user_id = ?",
+                (session_id, user_id)
+            )
+            conn.commit()
+            success = cursor.rowcount > 0
+            conn.close()
+            return success
+        except Exception:
+            conn.close()
+            return False
+
+    def get_chat_history(self, user_id: int, limit: int = 30) -> List[Dict]:
+        """Get recent chat history for a user (deprecated - use get_chat_sessions instead)"""
+        return self.get_chat_sessions(user_id, limit)
+
+    def delete_chat_message(self, user_id: int, chat_id: int) -> bool:
+        """Delete a specific chat message from history"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "DELETE FROM chat_history WHERE id = ? AND user_id = ?",
+                (chat_id, user_id)
+            )
+            conn.commit()
+            success = cursor.rowcount > 0
+            conn.close()
+            return success
+        except Exception:
+            conn.close()
+            return False
 
     def save_journal_entry(self, user_id: int, mood_score: int, emotions: str, triggers: str, notes: str) -> int:
         """Save a mood journal entry and return its id"""

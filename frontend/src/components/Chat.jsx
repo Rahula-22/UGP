@@ -20,7 +20,8 @@ const LANGUAGES = [
 
 function Chat({ sessionToken, onBack }) {
   const [messages, setMessages] = useState([]);
-  const [chatHistory, setChatHistory] = useState([]);
+  const [chatSessions, setChatSessions] = useState([]);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -75,31 +76,73 @@ function Chat({ sessionToken, onBack }) {
   }, [messages]);
 
   useEffect(() => {
-    const loadChatHistory = async () => {
+    const loadChatSessions = async () => {
       if (!sessionToken) return;
       try {
-        const res = await axios.get(`${API_BASE}/api/chat-history/${sessionToken}`);
-        setChatHistory(res.data.history || []);
+        const res = await axios.get(`${API_BASE}/api/chat-sessions/${sessionToken}`);
+        console.log('Chat sessions loaded:', res.data.sessions);
+        setChatSessions(res.data.sessions || []);
       } catch (error) {
-        console.error('Failed to load chat history:', error);
+        console.error('Failed to load chat sessions:', error);
       }
     };
 
-    loadChatHistory();
+    loadChatSessions();
   }, [sessionToken]);
 
-  const loadPreviousConversation = (historyItem) => {
-    // Load the selected conversation into the main chat
-    const conversation = [
-      { role: 'user', content: historyItem.message },
-      { role: 'assistant', content: historyItem.response }
-    ];
-    setMessages(conversation);
+  const createNewSession = async () => {
+    if (!sessionToken) return;
+    try {
+      const res = await axios.post(`${API_BASE}/api/create-session?session_token=${sessionToken}`, {
+        title: null
+      });
+      setCurrentSessionId(res.data.session_id);
+      setMessages([]);
+      setInput('');
+      // Reload sessions
+      const sessionsRes = await axios.get(`${API_BASE}/api/chat-sessions/${sessionToken}`);
+      setChatSessions(sessionsRes.data.sessions || []);
+    } catch (error) {
+      console.error('Failed to create new session:', error);
+    }
   };
 
-  const deleteFromHistory = (e, historyId) => {
+  const loadSessionMessages = async (sessionId) => {
+    if (!sessionToken) return;
+    try {
+      const res = await axios.get(`${API_BASE}/api/session-messages/${sessionToken}/${sessionId}`);
+      console.log('Session messages loaded:', res.data.messages);
+
+      // Convert messages to chat format
+      const chatMessages = [];
+      for (const msg of res.data.messages) {
+        chatMessages.push({ role: 'user', content: msg.message });
+        chatMessages.push({ role: 'assistant', content: msg.response });
+      }
+      setMessages(chatMessages);
+      setCurrentSessionId(sessionId);
+    } catch (error) {
+      console.error('Failed to load session messages:', error);
+    }
+  };
+
+  const deleteSession = async (e, sessionId) => {
     e.stopPropagation();
-    setChatHistory(prev => prev.filter(item => item.id !== historyId));
+    e.preventDefault();
+
+    if (!sessionToken) return;
+
+    try {
+      await axios.delete(`${API_BASE}/api/chat-sessions/${sessionToken}/${sessionId}`);
+      setChatSessions(prev => prev.filter(session => session.id !== sessionId));
+      if (currentSessionId === sessionId) {
+        setMessages([]);
+        setCurrentSessionId(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+      alert('Failed to delete session: ' + (error.response?.data?.detail || error.message));
+    }
   };
 
   const toggleVoiceInput = () => {
@@ -155,28 +198,33 @@ function Chat({ sessionToken, onBack }) {
     setLoading(true);
 
     try {
+      // Create a new session if we don't have one
+      let sessionId = currentSessionId;
+      if (!sessionId) {
+        const sessionRes = await axios.post(`${API_BASE}/api/create-session?session_token=${sessionToken}`, {
+          title: null
+        });
+        sessionId = sessionRes.data.session_id;
+        setCurrentSessionId(sessionId);
+      }
+
       const response = await axios.post(
         `${API_BASE}/api/chat-with-auth?session_token=${sessionToken}`,
         {
           message: userMessage,
-          language: selectedLang.name
+          language: selectedLang.name,
+          session_id: sessionId
         }
       );
 
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
+      setMessages(prev => [...prev, {
+        role: 'assistant',
         content: response.data.response
       }]);
 
-      setChatHistory(prev => [
-        {
-          id: `new-${Date.now()}`,
-          message: userMessage,
-          response: response.data.response,
-          created_at: new Date().toISOString(),
-        },
-        ...prev
-      ]);
+      // Reload sessions to show updated list
+      const sessionsRes = await axios.get(`${API_BASE}/api/chat-sessions/${sessionToken}`);
+      setChatSessions(sessionsRes.data.sessions || []);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -205,43 +253,42 @@ function Chat({ sessionToken, onBack }) {
             </button>
           </div>
           <button
-            onClick={() => {
-              setMessages([]);
-              setInput('');
-            }}
+            onClick={() => createNewSession()}
             className="w-full px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-sm font-medium transition-colors"
           >
             + New Chat
           </button>
         </div>
 
-        {/* Chat History List */}
+        {/* Chat Sessions List */}
         <div className="flex-1 overflow-y-auto">
-          {chatHistory.length === 0 ? (
+          {chatSessions.length === 0 ? (
             <div className="p-4 text-sm text-gray-500 text-center">
-              No chat history yet
+              No chat sessions yet
             </div>
           ) : (
             <div className="px-2 py-2 space-y-1">
-              {chatHistory.map((history) => (
+              {chatSessions.map((session) => (
                 <div
-                  key={history.id}
-                  className="group flex items-center gap-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  key={session.id}
+                  className={`group flex items-center gap-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer ${
+                    currentSessionId === session.id ? 'bg-indigo-50' : ''
+                  }`}
                 >
                   <button
                     onClick={() => {
-                      loadPreviousConversation(history);
+                      loadSessionMessages(session.id);
                       setSidebarOpen(false);
                     }}
                     className="flex-1 text-left px-3 py-2 text-sm text-gray-700 truncate"
-                    title={history.message}
+                    title={session.title}
                   >
-                    {history.message.length > 40 ? `${history.message.slice(0, 40)}...` : history.message}
+                    {session.title}
                   </button>
                   <button
-                    onClick={(e) => deleteFromHistory(e, history.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
-                    title="Delete chat"
+                    onClick={(e) => deleteSession(e, session.id)}
+                    className="p-1 text-red-500 hover:text-red-700 transition-all"
+                    title="Delete session"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

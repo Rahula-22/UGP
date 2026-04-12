@@ -13,6 +13,7 @@ import {
   Mail,
   Phone,
 } from 'lucide-react';
+import heroImage from '../assets/image.png';
 
 function FeatureCard({ icon: Icon, title, description }) {
   return (
@@ -49,71 +50,6 @@ function TestimonialCard({ quote, name, meta }) {
         </div>
       </div>
     </div>
-  );
-}
-
-function HeroIllustration() {
-  return (
-    <svg
-      viewBox="0 0 560 420"
-      className="h-auto w-full"
-      role="img"
-      aria-label="Calming wellness illustration"
-    >
-      <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#BAE6FD" stopOpacity="0.9" />
-          <stop offset="45%" stopColor="#DDD6FE" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#BBF7D0" stopOpacity="0.9" />
-        </linearGradient>
-        <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.95" />
-          <stop offset="50%" stopColor="#7C3AED" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#22C55E" stopOpacity="0.95" />
-        </linearGradient>
-        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="18" stdDeviation="18" floodColor="#0F172A" floodOpacity="0.16" />
-        </filter>
-      </defs>
-
-      <rect x="0" y="0" width="560" height="420" rx="28" fill="url(#bg)" />
-      <circle cx="85" cy="85" r="62" fill="#FFFFFF" opacity="0.55" />
-      <circle cx="505" cy="110" r="84" fill="#FFFFFF" opacity="0.45" />
-      <circle cx="460" cy="360" r="110" fill="#FFFFFF" opacity="0.35" />
-
-      <g filter="url(#softShadow)">
-        <rect x="74" y="88" width="412" height="260" rx="26" fill="rgba(255,255,255,0.72)" />
-        <rect x="96" y="114" width="180" height="16" rx="8" fill="rgba(15,23,42,0.18)" />
-        <rect x="96" y="142" width="260" height="12" rx="6" fill="rgba(15,23,42,0.12)" />
-
-        <rect x="96" y="182" width="368" height="74" rx="18" fill="url(#card)" opacity="0.92" />
-        <circle cx="134" cy="219" r="18" fill="rgba(255,255,255,0.28)" />
-        <path
-          d="M126 220c0-7 6-13 13-13s13 6 13 13-6 13-13 13-13-6-13-13Z"
-          fill="rgba(255,255,255,0.22)"
-        />
-        <rect x="164" y="205" width="180" height="12" rx="6" fill="rgba(255,255,255,0.72)" />
-        <rect x="164" y="225" width="230" height="10" rx="5" fill="rgba(255,255,255,0.55)" />
-
-        <rect x="96" y="276" width="228" height="50" rx="18" fill="rgba(255,255,255,0.92)" />
-        <rect x="342" y="276" width="122" height="50" rx="18" fill="rgba(255,255,255,0.92)" />
-        <path
-          d="M122 306c14-22 30 22 44 0s30 22 44 0"
-          fill="none"
-          stroke="rgba(14,165,233,0.9)"
-          strokeWidth="6"
-          strokeLinecap="round"
-        />
-        <path
-          d="M382 309c0-10 9-18 19-18s19 8 19 18-9 18-19 18-19-8-19-18Z"
-          fill="rgba(34,197,94,0.22)"
-        />
-        <path
-          d="M399 303c3-6 10-7 14-2 4 5 0 12-7 16-8-4-11-9-7-14Z"
-          fill="rgba(34,197,94,0.8)"
-        />
-      </g>
-    </svg>
   );
 }
 
@@ -171,7 +107,7 @@ export default function Landing({ onSignIn, onSignUp }) {
             </h1>
 
             <p className="mt-4 max-w-xl text-base leading-relaxed text-gray-600">
-              Emotional support, therapy tools, and self-care — in one modern platform. Chat with an AI companion,
+              Emotional support, therapy tools, and self care - in one modern platform. Chat with an AI companion,
               track your mood, meditate with guided sessions, book a professional therapist, and connect with
               supportive groups.
             </p>
@@ -206,8 +142,12 @@ export default function Landing({ onSignIn, onSignUp }) {
           </div>
 
           <div className="relative">
-            <div className="rounded-3xl border border-white/60 bg-white/40 p-3 shadow-2xl backdrop-blur">
-              <HeroIllustration />
+            <div className="overflow-hidden rounded-3xl border border-white/60 bg-white/40 p-3 shadow-2xl backdrop-blur">
+              <img
+                src={heroImage}
+                alt="Mental health illustration"
+                className="h-full w-full min-h-[320px] object-cover rounded-3xl"
+              />
             </div>
             <div className="pointer-events-none absolute -bottom-7 left-6 rounded-2xl border border-white/50 bg-white/70 px-4 py-3 text-xs font-semibold text-gray-700 shadow-sm backdrop-blur">
               Calm design • Real tools • Everyday support

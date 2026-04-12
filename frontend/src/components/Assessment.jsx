@@ -813,65 +813,75 @@ function Assessment({ sessionToken, onBack }) {
               {highRisk && crisisBlock}
 
               {/* AI Interpretation */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-7">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2 uppercase tracking-wide">
-                  <Sparkles className="w-4 h-4 text-indigo-400" /> Understanding Your Result
+              <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-sky-50 p-6 sm:p-8 shadow-lg shadow-slate-200/50">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 flex items-center gap-3 uppercase tracking-[0.18em]">
+                  <Sparkles className="w-5 h-5 text-sky-600" />
+                  Understanding Your Result
                 </h3>
                 {summaryLoading ? (
-                  <div className="space-y-2.5 py-2">
-                    <div className="h-3 bg-gray-100 rounded-full animate-pulse w-full" />
-                    <div className="h-3 bg-gray-100 rounded-full animate-pulse w-5/6" />
-                    <div className="h-3 bg-gray-100 rounded-full animate-pulse w-4/5" />
-                    <div className="h-3 bg-gray-100 rounded-full animate-pulse w-3/4" />
-                    <p className="text-sm text-gray-400 mt-3 text-center">Generating personalised interpretation…</p>
+                  <div className="space-y-3 py-2">
+                    <div className="h-3 bg-slate-200 rounded-full animate-pulse w-full" />
+                    <div className="h-3 bg-slate-200 rounded-full animate-pulse w-5/6" />
+                    <div className="h-3 bg-slate-200 rounded-full animate-pulse w-4/5" />
+                    <div className="h-3 bg-slate-200 rounded-full animate-pulse w-3/4" />
+                    <p className="text-sm text-slate-500 mt-3 text-center">Generating personalised interpretation…</p>
                   </div>
                 ) : (
-                  <div>
-                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{aiSummary}</p>
-                    <p className="text-sm text-gray-400 mt-4 pt-3 border-t border-gray-100 italic">Screening result only — not a clinical diagnosis. Always consult a qualified professional.</p>
+                  <div className="rounded-3xl bg-white/90 border border-slate-200 p-5 shadow-sm">
+                    <p className="text-base sm:text-base text-slate-800 leading-8 whitespace-pre-line">{aiSummary}</p>
+                    <p className="text-sm text-slate-500 mt-5 pt-4 border-t border-slate-200 italic">Screening result only - not a clinical diagnosis. Always consult a qualified professional.</p>
                   </div>
                 )}
               </div>
 
               {/* Coping Techniques */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-7">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-0.5 uppercase tracking-wide">{coping.headline}</h3>
-                <p className="text-sm text-gray-400 mb-4">Evidence-based techniques for your primary concern</p>
-                <div className="grid gap-3 sm:grid-cols-2">
+              <div className="bg-slate-50 rounded-3xl shadow-xl border border-slate-200 p-6 sm:p-7">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1 tracking-tight">{coping.headline}</h3>
+                    <p className="text-sm sm:text-base text-slate-600 max-w-2xl">Evidence-based techniques and calming strategies designed to help you manage anxiety, worry, and nervous tension more effectively.</p>
+                  </div>
+                  <div className="rounded-3xl bg-white border border-slate-200 px-4 py-3 text-sm text-slate-700 shadow-sm">
+                    <p className="font-semibold text-slate-900">Focus area</p>
+                    <p className="mt-1">Personalized guidance for your most pressing concern.</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-4 lg:grid-cols-2">
                   {coping.techniques.map((t, i) => (
                     <div
                       key={i}
-                      className={`group rounded-2xl border bg-white transition-all ${
+                      className={`group overflow-hidden rounded-[2rem] border bg-white transition-all ${
                         expandedTechnique === i
-                          ? 'border-indigo-200 shadow-sm'
-                          : 'border-gray-100 hover:border-indigo-150 hover:shadow-sm'
+                          ? 'border-sky-200 shadow-[0_20px_48px_-24px_rgba(14,165,233,0.45)]'
+                          : 'border-slate-200 hover:border-sky-200 hover:shadow-sm'
                       }`}
                     >
                       <button onClick={() => setExpandedTechnique(expandedTechnique === i ? null : i)}
-                        className="w-full p-5 text-left">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3 min-w-0">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-2xl ring-1 ring-indigo-100 flex-shrink-0">
+                        className="w-full p-6 text-left">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-4 min-w-0">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-sky-50 text-3xl text-sky-600 ring-1 ring-sky-100 flex-shrink-0">
                               {t.icon}
                             </div>
                             <div className="min-w-0">
-                              <p className="font-semibold text-gray-900 text-base leading-tight">{t.name}</p>
-                              <p className="text-sm text-gray-500 mt-1 leading-relaxed">{t.desc}</p>
+                              <p className="font-semibold text-slate-900 text-lg leading-tight">{t.name}</p>
+                              <p className="text-sm text-slate-500 mt-2 leading-relaxed">{t.desc}</p>
 
-                              <div className="mt-3 flex flex-wrap gap-2">
+                              <div className="mt-4 flex flex-wrap gap-2">
                                 {t.meta?.time && (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700 ring-1 ring-gray-200">
-                                    <Clock className="w-3.5 h-3.5 text-gray-400" />
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
                                     {t.meta.time}
                                   </span>
                                 )}
                                 {t.meta?.goal && (
-                                  <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
+                                  <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 ring-1 ring-sky-100">
                                     {t.meta.goal}
                                   </span>
                                 )}
                                 {t.meta?.when && (
-                                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
                                     Best when: {t.meta.when}
                                   </span>
                                 )}
@@ -879,21 +889,21 @@ function Assessment({ sessionToken, onBack }) {
                             </div>
                           </div>
 
-                          <ChevronRight className={`w-4 h-4 text-gray-300 transition-transform flex-shrink-0 mt-1 ${
-                            expandedTechnique === i ? 'rotate-90 text-indigo-400' : 'group-hover:text-gray-500'
+                          <ChevronRight className={`w-5 h-5 text-slate-300 transition-transform ${
+                            expandedTechnique === i ? 'rotate-90 text-sky-500' : 'group-hover:text-slate-500'
                           }`} />
                         </div>
                       </button>
                       {expandedTechnique === i && (
-                        <div className="px-4 pb-4 bg-indigo-50/60 border-t border-indigo-100 rounded-b-2xl">
-                          <div className="pt-3 flex items-center justify-between gap-3">
-                            <p className="text-sm font-bold text-indigo-900 uppercase tracking-wide">How to do it</p>
-                            <span className="text-sm text-indigo-700 font-semibold">Tap to collapse</span>
+                        <div className="bg-sky-50/80 border-t border-sky-100 px-5 pb-5 pt-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm font-semibold text-sky-900 uppercase tracking-[0.18em]">How to do it</p>
+                            <span className="text-sm text-slate-600">Tap to collapse</span>
                           </div>
-                          <ol className="space-y-2 mt-3">
+                          <ol className="space-y-3 mt-4">
                             {t.steps.map((step, si) => (
-                              <li key={si} className="flex gap-3 text-sm text-gray-700">
-                                <span className="w-5 h-5 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{si + 1}</span>
+                              <li key={si} className="flex gap-3 text-sm text-slate-700">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-600 text-white text-xs font-bold flex-shrink-0 mt-0.5">{si + 1}</span>
                                 <span className="leading-relaxed">{step}</span>
                               </li>
                             ))}
@@ -906,25 +916,34 @@ function Assessment({ sessionToken, onBack }) {
               </div>
 
               {/* CBT Exercise */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="text-base font-bold text-gray-900 mb-1 uppercase tracking-wide flex items-center gap-2">
-                  <span>{cbtEx.icon}</span> CBT Exercise: {cbtEx.name}
-                </h3>
-                <p className="text-sm text-gray-500 mb-5 leading-relaxed">{cbtEx.intro}</p>
-                <div className="space-y-4">
+              <div className="bg-gradient-to-br from-sky-50 via-white to-slate-50 rounded-[2rem] border border-sky-100 shadow-xl p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
+                      <span>{cbtEx.icon}</span>
+                      CBT Exercise
+                    </div>
+                    <h3 className="mt-4 text-xl sm:text-2xl font-bold text-slate-900">Decatastrophising</h3>
+                  </div>
+                  <p className="max-w-xl text-sm sm:text-base text-slate-600 leading-7">Anxiety magnifies threats. This exercise helps you realistically evaluate how bad something actually is — and how capable you are of handling it.</p>
+                </div>
+
+                <div className="mt-6 space-y-5">
                   {cbtEx.steps.map((step, i) => (
-                    <div key={i}>
-                      <label className="block text-base font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                        <span className="inline-flex items-center justify-center w-5 h-5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">{i + 1}</span>
-                        {step.label}
-                      </label>
-                      <p className="text-sm text-gray-500 mb-2 leading-relaxed">{step.prompt}</p>
+                    <div key={i} className="rounded-3xl bg-white border border-slate-200 p-5 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-3xl bg-sky-600 text-white text-sm font-bold shadow-sm">{i + 1}</div>
+                        <div className="space-y-2">
+                          <p className="text-base font-semibold text-slate-900">{step.label}</p>
+                          <p className="text-sm text-slate-600 leading-relaxed">{step.prompt}</p>
+                        </div>
+                      </div>
                       <textarea
-                        rows={2}
+                        rows={3}
                         value={cbtAnswers[i] || ''}
                         onChange={e => setCbtAnswers(prev => ({ ...prev, [i]: e.target.value }))}
-                        placeholder="Write your answer here…"
-                        className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent resize-none transition-shadow"
+                        placeholder="Write your response here…"
+                        className="mt-4 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 shadow-sm transition focus:border-sky-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-200 resize-none"
                       />
                     </div>
                   ))}
@@ -932,15 +951,28 @@ function Assessment({ sessionToken, onBack }) {
               </div>
 
               {/* Lifestyle Tips */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-7">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-4 uppercase tracking-wide">Lifestyle Recommendations</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="bg-gradient-to-br from-slate-50 via-white to-sky-50 rounded-[2rem] border border-slate-200 shadow-xl p-6 sm:p-7">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Lifestyle Recommendations</h3>
+                    <p className="text-sm sm:text-base text-slate-600 max-w-2xl">Practical daily habits and small adjustments you can use to support your mental balance and reduce anxiety.</p>
+                  </div>
+                  <div className="rounded-3xl border border-slate-200 bg-white/90 px-4 py-3 shadow-sm text-sm text-slate-700">
+                    <p className="font-semibold text-slate-900">Quick habits</p>
+                    <p className="mt-1">Easy steps to build positivity and calm each day.</p>
+                  </div>
+                </div>
+                <div className="mt-6 grid gap-4 lg:grid-cols-2">
                   {LIFESTYLE_TIPS.map((tip, i) => (
-                    <div key={i} className="flex gap-3 p-4 bg-gray-50 rounded-xl hover:bg-indigo-50/50 transition-colors">
-                      <span className="text-2xl flex-shrink-0">{tip.icon}</span>
-                      <div>
-                        <p className="text-base font-semibold text-gray-800">{tip.title}</p>
-                        <p className="text-sm text-gray-500 mt-1 leading-relaxed">{tip.tip}</p>
+                    <div key={i} className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:-translate-y-0.5">
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-sky-100 text-3xl text-sky-600 shadow-inner">
+                          {tip.icon}
+                        </div>
+                        <div>
+                          <p className="text-lg font-semibold text-slate-900">{tip.title}</p>
+                          <p className="mt-2 text-sm text-slate-600 leading-relaxed">{tip.tip}</p>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -967,183 +999,220 @@ function Assessment({ sessionToken, onBack }) {
 
           {/* ── TALK TAB ─────────────────────────────────────────────────── */}
           {supportTab === 'talk' && (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col" style={{ height: '72vh' }}>
-              <div className="p-4 border-b border-gray-100 flex items-center gap-3">
-                <div className={`w-9 h-9 bg-gradient-to-br ${activeTool.accentFrom} ${activeTool.accentTo} rounded-full flex items-center justify-center flex-shrink-0`}>
-                  <MessageCircle className="w-4 h-4 text-white" />
+            <div className="bg-slate-50 rounded-3xl shadow-xl border border-slate-200 flex flex-col overflow-hidden min-h-[70vh]">
+              <div className="p-4 border-b border-slate-200 bg-white/95 flex items-center gap-3">
+                <div className={`w-11 h-11 bg-gradient-to-br ${activeTool.accentFrom} ${activeTool.accentTo} rounded-full flex items-center justify-center flex-shrink-0 shadow-md`}>
+                  <MessageCircle className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-800">AI Companion</p>
-                  <p className="text-xs text-gray-400">Supportive conversation — not a replacement for therapy</p>
+                  <p className="text-sm font-semibold text-slate-900">AI Companion</p>
+                  <p className="text-xs text-slate-500">Supportive conversation, not a replacement for therapy</p>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-slate-50">
                 {chatMessages.length === 0 && (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center text-gray-400 px-8">
-                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <MessageCircle className="w-6 h-6 opacity-40" />
+                  <div className="flex h-full min-h-[320px] items-center justify-center">
+                    <div className="text-center text-slate-500 px-8">
+                      <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <MessageCircle className="w-7 h-7 text-slate-400" />
                       </div>
-                      <p className="text-sm">Loading your personalised greeting…</p>
+                      <p className="text-sm leading-relaxed">Your AI companion is preparing a warm, supportive greeting. Start typing whenever you’re ready.</p>
                     </div>
                   </div>
                 )}
                 {chatMessages.map((msg, i) => (
-                  <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     {msg.role === 'assistant' && (
-                      <div className={`w-7 h-7 bg-gradient-to-br ${activeTool.accentFrom} ${activeTool.accentTo} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}>
-                        <Brain className="w-3.5 h-3.5 text-white" />
+                      <div className={`w-10 h-10 bg-gradient-to-br ${activeTool.accentFrom} ${activeTool.accentTo} rounded-full flex items-center justify-center flex-shrink-0`}>
+                        <Brain className="w-4 h-4 text-white" />
                       </div>
                     )}
-                    <div className={`max-w-xs sm:max-w-sm rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    <div className={`max-w-full sm:max-w-[70%] rounded-3xl px-5 py-4 text-base leading-7 shadow-sm ${
                       msg.role === 'user'
-                        ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-br-sm'
-                        : 'bg-gray-100 text-gray-800 rounded-bl-sm'
+                        ? 'bg-slate-900 text-white rounded-br-[18px] rounded-bl-3xl rounded-tl-3xl rounded-tr-3xl'
+                        : 'bg-white text-slate-800 border border-slate-200'
                     }`}>
                       {msg.content.split('\n').map((line, li) => (
-                        <span key={li}>{line}{li < msg.content.split('\n').length - 1 && <br />}</span>
+                        <span key={li} className="block">{line}</span>
                       ))}
                     </div>
                   </div>
                 ))}
                 {chatLoading && (
-                  <div className="flex gap-2 justify-start">
-                    <div className={`w-7 h-7 bg-gradient-to-br ${activeTool.accentFrom} ${activeTool.accentTo} rounded-full flex items-center justify-center flex-shrink-0`}>
-                      <Brain className="w-3.5 h-3.5 text-white" />
+                  <div className="flex gap-3 justify-start">
+                    <div className={`w-10 h-10 bg-gradient-to-br ${activeTool.accentFrom} ${activeTool.accentTo} rounded-full flex items-center justify-center flex-shrink-0`}>
+                      <Brain className="w-4 h-4 text-white" />
                     </div>
-                    <div className="bg-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="bg-white text-slate-600 border border-slate-200 rounded-3xl px-4 py-3 flex items-center gap-2 shadow-sm">
+                      <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <span className="text-sm">Thinking...</span>
                     </div>
                   </div>
                 )}
                 <div ref={chatEndRef} />
               </div>
 
-              <form onSubmit={handleSendChat} className="p-3 border-t border-gray-100 flex gap-2">
-                <input
-                  type="text" value={chatInput} onChange={e => setChatInput(e.target.value)}
-                  placeholder="Share how you're feeling…" disabled={chatLoading}
-                  className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-transparent disabled:opacity-50 bg-gray-50 focus:bg-white transition-colors"
-                />
-                <button type="submit" disabled={chatLoading || !chatInput.trim()}
-                  className={`px-4 py-2.5 bg-gradient-to-r ${activeTool.accentFrom} ${activeTool.accentTo} text-white rounded-xl disabled:opacity-40 transition-all hover:opacity-90`}>
-                  <Send className="w-4 h-4" />
-                </button>
+              <form onSubmit={handleSendChat} className="p-4 border-t border-slate-200 bg-white/95 flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <label htmlFor="assessment-chat-input" className="text-xs uppercase tracking-[0.24em] text-slate-400">Talk to your companion</label>
+                  <span className="text-xs text-slate-500">Helpful, kind, and private</span>
+                </div>
+                <div className="flex gap-3">
+                  <input
+                    id="assessment-chat-input"
+                    type="text"
+                    value={chatInput}
+                    onChange={e => setChatInput(e.target.value)}
+                    placeholder="Share how you're feeling…"
+                    disabled={chatLoading}
+                    className="flex-1 px-4 py-3 text-sm text-slate-800 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-sky-400 focus:border-transparent disabled:opacity-50 bg-slate-50 transition-colors"
+                  />
+                  <button type="submit" disabled={chatLoading || !chatInput.trim()}
+                    className={`inline-flex items-center justify-center px-5 py-3 rounded-2xl text-sm font-semibold text-white transition-all ${chatLoading || !chatInput.trim() ? 'bg-slate-400 cursor-not-allowed' : `bg-gradient-to-r ${activeTool.accentFrom} ${activeTool.accentTo} hover:opacity-90`}`}>
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
               </form>
             </div>
           )}
 
           {/* ── JOURNAL TAB ──────────────────────────────────────────────── */}
           {supportTab === 'journal' && (
-            <div className="space-y-5">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="text-sm font-bold text-gray-900 mb-5 uppercase tracking-wide">Today's Mood Log</h3>
+            <div className="space-y-6">
+              <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 rounded-[2rem] shadow-[0_24px_80px_rgba(15,23,42,0.14)] border border-slate-800 p-6">
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-white mb-2">Daily Journal</h3>
+                  <p className="text-sm text-slate-300 max-w-2xl">Capture your mood, emotions, and reflections. A simple daily entry can help you spot patterns and feel more grounded.</p>
+                </div>
 
                 {journalSaved && (
-                  <div className="flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-xl p-4 mb-5 text-sm text-green-800">
-                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    <span className="font-medium">Entry saved successfully.</span>
-                    <button onClick={() => setJournalSaved(false)} className="ml-auto text-green-600 hover:text-green-800 text-xs underline">Log another</button>
+                  <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-3xl p-4 mb-5 text-sm text-emerald-900 shadow-sm">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold">Entry saved successfully.</p>
+                      <p className="text-xs text-emerald-700">Your reflection is ready for later review.</p>
+                    </div>
+                    <button onClick={() => setJournalSaved(false)} className="ml-auto text-emerald-700 hover:text-emerald-900 text-xs font-semibold underline">Write another</button>
                   </div>
                 )}
 
                 {!journalSaved && (
-                  <>
-                    {/* Mood slider */}
-                    <div className="mb-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm font-semibold text-gray-700">How are you feeling?</label>
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{MOOD_EMOJIS[journalMood]}</span>
-                          <span className="text-sm font-bold text-indigo-600">{MOOD_LABELS[journalMood]}</span>
+                  <div className="space-y-6">
+                    <div className="rounded-[1.75rem] border border-slate-800 bg-slate-950/80 p-6 shadow-inner">
+                      <div className="flex items-center justify-between mb-4 gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-300 uppercase tracking-[0.18em]">Mood check</p>
+                          <div className="mt-3 flex items-center gap-3">
+                            <div className="text-3xl">{MOOD_EMOJIS[journalMood]}</div>
+                            <div>
+                              <p className="text-base font-semibold text-white">{MOOD_LABELS[journalMood]}</p>
+                              <p className="text-xs text-slate-400">Slide to reflect how your day felt.</p>
+                            </div>
+                          </div>
                         </div>
+                        <span className="rounded-full bg-indigo-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-100">{journalMood}/10</span>
                       </div>
                       <input type="range" min={1} max={10} value={journalMood} onChange={e => setJournalMood(Number(e.target.value))}
-                        className="w-full accent-indigo-500 h-2" />
-                      <div className="flex justify-between text-xs text-gray-400 mt-1.5">
-                        <span>😞 Very Low</span>
-                        <span>😐 Neutral</span>
-                        <span>🤩 Excellent</span>
+                        className="w-full accent-indigo-400 h-2 rounded-full" />
+                      <div className="mt-3 grid grid-cols-3 text-[11px] text-slate-400 gap-2">
+                        <span className="text-left">😞 Very low</span>
+                        <span className="text-center">😐 Neutral</span>
+                        <span className="text-right">🤩 Excellent</span>
                       </div>
                     </div>
 
-                    {/* Emotions */}
-                    <div className="mb-5">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2.5">Emotions right now</label>
-                      <div className="flex flex-wrap gap-2">
-                        {EMOTION_OPTIONS.map(em => (
-                          <button key={em} type="button"
-                            onClick={() => setJournalEmotions(prev => prev.includes(em) ? prev.filter(e => e !== em) : [...prev, em])}
-                            className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
-                              journalEmotions.includes(em)
-                                ? 'bg-indigo-500 text-white border-indigo-500 shadow-sm'
-                                : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'
-                            }`}>
-                            {em}
-                          </button>
-                        ))}
+                    <div className="rounded-[1.75rem] border border-slate-800 bg-slate-950/90 p-5 space-y-5">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-200 mb-3">Emotions right now</label>
+                        <div className="flex flex-wrap gap-2">
+                          {EMOTION_OPTIONS.map(em => (
+                            <button key={em} type="button"
+                              onClick={() => setJournalEmotions(prev => prev.includes(em) ? prev.filter(e => e !== em) : [...prev, em])}
+                              className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
+                                journalEmotions.includes(em)
+                                  ? 'bg-indigo-500 text-white border-indigo-500 shadow-[0_10px_30px_rgba(99,102,241,0.18)]'
+                                  : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-indigo-400 hover:bg-slate-800'
+                              }`}>
+                              {em}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Triggers */}
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Triggers or notable events</label>
-                      <input type="text" value={journalTriggers} onChange={e => setJournalTriggers(e.target.value)}
-                        placeholder="What happened today that affected your mood?"
-                        className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-transparent bg-gray-50 focus:bg-white transition-colors" />
-                    </div>
-
-                    {/* Notes */}
-                    <div className="mb-5">
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Notes & reflections</label>
-                      <textarea rows={3} value={journalNotes} onChange={e => setJournalNotes(e.target.value)}
-                        placeholder="Any thoughts, reflections, or things you want to remember…"
-                        className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-transparent resize-none bg-gray-50 focus:bg-white transition-colors" />
+                      <div className="grid gap-5 md:grid-cols-2">
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-200 mb-2">Triggers or notable events</label>
+                          <input type="text" value={journalTriggers} onChange={e => setJournalTriggers(e.target.value)}
+                            placeholder="What happened today that affected your mood?"
+                            className="w-full rounded-3xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20 outline-none transition-colors" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-200 mb-2">Notes & reflections</label>
+                          <textarea rows={4} value={journalNotes} onChange={e => setJournalNotes(e.target.value)}
+                            placeholder="Any thoughts, reflections, or things you want to remember…"
+                            className="w-full rounded-3xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20 outline-none transition-colors resize-none" />
+                        </div>
+                      </div>
                     </div>
 
                     <button onClick={saveJournalEntry} disabled={journalSaving}
-                      className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl text-sm font-semibold disabled:opacity-50 hover:opacity-90 transition-all shadow-md shadow-indigo-200">
+                      className="w-full rounded-3xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60">
                       {journalSaving
                         ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Saving…</span>
                         : 'Save Entry'
                       }
                     </button>
-                  </>
+                  </div>
                 )}
               </div>
 
               {/* Journal history */}
-              {journalHistory.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                  <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Past Entries</h3>
-                  <div className="space-y-3">
+              {journalHistory.length > 0 ? (
+                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Past Entries</h3>
+                      <p className="text-xs text-slate-500">Review your recent mood reflections in one place.</p>
+                    </div>
+                    <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">{journalHistory.length} entries</span>
+                  </div>
+                  <div className="space-y-4">
                     {journalHistory.slice(0, 10).map((entry, i) => {
                       const moodColour = entry.mood_score >= 7 ? 'green' : entry.mood_score >= 4 ? 'yellow' : 'red';
                       const emotions = JSON.parse(entry.emotions || '[]');
                       return (
-                        <div key={i} className="border border-gray-100 rounded-xl p-4 hover:border-indigo-100 transition-colors">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{MOOD_EMOJIS[entry.mood_score] || '😐'}</span>
-                              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${SEVERITY_STYLES[moodColour]?.badge}`}>
-                                {entry.mood_score}/10
-                              </span>
+                        <div key={i} className="rounded-3xl border border-slate-200 p-4 shadow-sm transition hover:border-indigo-200 hover:shadow-md">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="text-2xl">{MOOD_EMOJIS[entry.mood_score] || '😐'}</div>
+                              <div>
+                                <p className="text-sm font-semibold text-slate-900">Mood score</p>
+                                <p className="text-sm text-slate-500">{entry.mood_score}/10</p>
+                              </div>
                             </div>
-                            <span className="text-xs text-gray-400">{new Date(entry.created_at).toLocaleDateString()}</span>
+                            <div className="text-right">
+                              <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${SEVERITY_STYLES[moodColour]?.badge}`}>{entry.mood_score >= 7 ? 'Stable' : entry.mood_score >= 4 ? 'Moderate' : 'Low'}</span>
+                              <p className="text-xs text-slate-400 mt-1">{new Date(entry.created_at).toLocaleDateString()}</p>
+                            </div>
                           </div>
                           {emotions.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mb-2">
-                              {emotions.map((em, ei) => <span key={ei} className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">{em}</span>)}
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              {emotions.map((em, ei) => <span key={ei} className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">{em}</span>)}
                             </div>
                           )}
-                          {entry.notes && <p className="text-xs text-gray-500 leading-relaxed">{entry.notes}</p>}
+                          {entry.notes && <p className="mt-4 text-sm leading-relaxed text-slate-600">{entry.notes}</p>}
                         </div>
                       );
                     })}
                   </div>
+                </div>
+              ) : (
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-slate-500">
+                  <p className="text-sm font-semibold text-slate-700 mb-2">No journal entries yet</p>
+                  <p className="text-sm">Your reflections will appear here once you save your first entry.</p>
                 </div>
               )}
             </div>

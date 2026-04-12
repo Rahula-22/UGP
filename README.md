@@ -1,16 +1,40 @@
-# Mental Health and Well-being AI Companion
+# 🧠 MindEase - Mental Health and Well-being AI Companion
 
-Full-stack mental wellness application with a FastAPI backend and a React + Vite frontend.
+> **Your Personal AI Companion for Mental Wellness**
+>
+> A comprehensive mental health platform designed to support your emotional well-being, reduce anxiety, help manage depression, and foster personal growth through AI-powered insights and evidence-based wellness practices.
 
-Core capabilities:
+## About MindEase
 
-- Retrieval-augmented AI chat over uploaded PDF knowledge sources
-- Emotion-aware response support
-- Clinical self-assessments (DASS-42, PHQ-9, GAD-7)
-- Mood journaling and wellness progress tracking
-- Gamified wellness elements (badges, gratitude, mini-games)
+MindEase is a full-stack mental wellness application that combines the power of artificial intelligence with evidence-based therapeutic techniques to help you:
 
-## Repository Analysis Snapshot
+✨ **Core Features:**
+
+- 🤖 **AI Chatbot Support** - Get personalized, empathetic responses grounded in mental health knowledge
+- 😌 **Anxiety Management** - Access calming techniques, guided conversations, and stress-reduction strategies
+- 😞 **Depression Support** - Track mood patterns, receive encouraging support, and develop coping strategies
+- 📊 **Clinical Assessments** - Take standardized mental health assessments (DASS-42, PHQ-9, GAD-7) to understand your mental state
+- 📝 **Mood Journaling** - Document your feelings and track emotional patterns over time
+- 🏆 **Gamified Wellness** - Earn badges, practice gratitude, and engage with wellness mini-games for motivation
+- 📚 **Knowledge Base** - Learn from comprehensive mental health resources and educational materials
+- ❤️ **Emotion-Aware Responses** - AI adapts responses based on your emotional state for more empathetic support
+
+## Why MindEase?
+
+Mental health challenges are increasingly common, and many people struggle to access timely, affordable support. MindEase bridges this gap by providing:
+
+- **24/7 Availability**: Access support whenever you need it, day or night
+- **Evidence-Based Approaches**: Built on established psychological assessments and wellness practices
+- **Privacy First**: Your mental health data is secure and confidential
+- **Non-Judgmental Support**: AI provides compassionate support without stigma
+- **Progress Tracking**: Monitor your wellness journey with detailed mood and emotion tracking
+- **Accessible Resource Library**: Learn from expert-curated mental health materials
+
+> ⚠️ **Important Disclaimer**: MindEase is a supportive wellness tool, not a replacement for professional mental health treatment. If you're in crisis, please contact emergency services or a crisis helpline immediately.
+
+---
+
+## 🏗️ Repository Structure
 
 This README has been aligned to the current codebase (April 2026):
 
@@ -21,12 +45,16 @@ This README has been aligned to the current codebase (April 2026):
 - Local data assets: `data/` (PDFs, vectorstore, SQLite DB)
 - Optional dataset ingestion: `process_dataset.py` from `data2/`
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-- Backend: Python, FastAPI, Uvicorn, Pydantic
-- AI/RAG: LangChain, FAISS, sentence-transformers, Groq
-- Data: SQLite (application data), local FAISS index (`data/vectorstore/index.faiss`)
-- Frontend: React 18, Vite, Tailwind CSS, Axios
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Backend** | Python, FastAPI, Uvicorn | RESTful API with async support |
+| **AI/RAG** | LangChain, FAISS, sentence-transformers, Groq | Intelligent document retrieval and response generation |
+| **Database** | SQLite | Persistent user data, chat history, assessments |
+| **Vector Store** | FAISS | Semantic search over mental health knowledge base |
+| **Frontend** | React 18, Vite, Tailwind CSS | Modern, responsive user interface |
+| **API Communication** | Axios | Reliable HTTP requests between frontend and backend |
 
 ## Project Structure
 

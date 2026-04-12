@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Send, Brain, Loader2, ArrowLeft, Mic, MicOff } from 'lucide-react';
+import { Send, Brain, Loader2, ArrowLeft, Mic, MicOff, History, Menu, X, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { API_BASE } from '../config/api';
 
@@ -20,10 +20,12 @@ const LANGUAGES = [
 
 function Chat({ sessionToken, onBack }) {
   const [messages, setMessages] = useState([]);
+  const [chatHistory, setChatHistory] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [selectedLang, setSelectedLang] = useState(LANGUAGES[0]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [voiceSupported] = useState(
     () => !!(window.SpeechRecognition || window.webkitSpeechRecognition)
   );
@@ -71,6 +73,34 @@ function Chat({ sessionToken, onBack }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      if (!sessionToken) return;
+      try {
+        const res = await axios.get(`${API_BASE}/api/chat-history/${sessionToken}`);
+        setChatHistory(res.data.history || []);
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+      }
+    };
+
+    loadChatHistory();
+  }, [sessionToken]);
+
+  const loadPreviousConversation = (historyItem) => {
+    // Load the selected conversation into the main chat
+    const conversation = [
+      { role: 'user', content: historyItem.message },
+      { role: 'assistant', content: historyItem.response }
+    ];
+    setMessages(conversation);
+  };
+
+  const deleteFromHistory = (e, historyId) => {
+    e.stopPropagation();
+    setChatHistory(prev => prev.filter(item => item.id !== historyId));
+  };
 
   const toggleVoiceInput = () => {
     if (isListening) {
@@ -125,15 +155,28 @@ function Chat({ sessionToken, onBack }) {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE}/api/chat`, {
-        message: userMessage,
-        language: selectedLang.name
-      });
+      const response = await axios.post(
+        `${API_BASE}/api/chat-with-auth?session_token=${sessionToken}`,
+        {
+          message: userMessage,
+          language: selectedLang.name
+        }
+      );
 
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: response.data.response
       }]);
+
+      setChatHistory(prev => [
+        {
+          id: `new-${Date.now()}`,
+          message: userMessage,
+          response: response.data.response,
+          created_at: new Date().toISOString(),
+        },
+        ...prev
+      ]);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -143,9 +186,89 @@ function Chat({ sessionToken, onBack }) {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      {/* Sidebar */}
+      <aside className={`fixed lg:relative top-0 left-0 h-screen w-64 border-r border-gray-200 bg-white transition-transform duration-300 z-20 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } lg:translate-x-0`}>
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <History className="w-5 h-5 text-indigo-600" />
+              <h2 className="text-lg font-semibold text-gray-900">History</h2>
+            </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden text-gray-500 hover:text-gray-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setMessages([]);
+              setInput('');
+            }}
+            className="w-full px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-sm font-medium transition-colors"
+          >
+            + New Chat
+          </button>
+        </div>
+
+        {/* Chat History List */}
+        <div className="flex-1 overflow-y-auto">
+          {chatHistory.length === 0 ? (
+            <div className="p-4 text-sm text-gray-500 text-center">
+              No chat history yet
+            </div>
+          ) : (
+            <div className="px-2 py-2 space-y-1">
+              {chatHistory.map((history) => (
+                <div
+                  key={history.id}
+                  className="group flex items-center gap-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <button
+                    onClick={() => {
+                      loadPreviousConversation(history);
+                      setSidebarOpen(false);
+                    }}
+                    className="flex-1 text-left px-3 py-2 text-sm text-gray-700 truncate"
+                    title={history.message}
+                  >
+                    {history.message.length > 40 ? `${history.message.slice(0, 40)}...` : history.message}
+                  </button>
+                  <button
+                    onClick={(e) => deleteFromHistory(e, history.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
+                    title="Delete chat"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-10 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       <div className="flex-1 flex flex-col">
         <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden text-gray-600 hover:text-gray-900"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
             <button
               onClick={onBack}
               className="text-gray-600 hover:text-gray-900"

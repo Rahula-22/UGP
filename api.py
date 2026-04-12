@@ -386,6 +386,19 @@ async def chat_with_auth(request: ChatRequest, session_token: str):
     
     return ChatResponse(response=response, sources=formatted_sources)
 
+@app.get("/api/chat-history/{session_token}")
+async def get_chat_history(session_token: str, limit: int = 30):
+    """Get a user's previous chat messages"""
+    user = db.verify_session(session_token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        history = db.get_chat_history(user['id'], limit=limit)
+        return {"history": history}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 def calculate_mental_health_score(responses: Dict, assessment_type: str = 'dass42') -> int:
     """Calculate total score from questionnaire responses."""
     return sum(int(v) for v in responses.values())

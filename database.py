@@ -287,6 +287,18 @@ class Database:
         conn.commit()
         conn.close()
 
+    def get_chat_history(self, user_id: int, limit: int = 30) -> List[Dict]:
+        """Get recent chat history for a user"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM chat_history WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
+            (user_id, limit)
+        )
+        rows = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return rows
+
     def save_journal_entry(self, user_id: int, mood_score: int, emotions: str, triggers: str, notes: str) -> int:
         """Save a mood journal entry and return its id"""
         conn = self.get_connection()

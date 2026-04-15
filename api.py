@@ -361,7 +361,7 @@ async def get_assessments(session_token: str):
 
 @app.post("/api/chat-with-auth")
 async def chat_with_auth(request: ChatRequest, session_token: str):
-    """Chat with authentication"""
+    """Chat with authentication and full personalization"""
     user = db.verify_session(session_token)
 
     if not user:
@@ -372,11 +372,68 @@ async def chat_with_auth(request: ChatRequest, session_token: str):
     if not session_id:
         session_id = db.create_chat_session(user['id'])
 
-    # Use existing chat logic
+    # Initialize Groq client if needed
     if not chatbot.groq_client and config.GROQ_API_KEY:
         chatbot.set_groq_api_key(config.GROQ_API_KEY)
 
-    response, sources, emotion_data = chatbot.chat(request.message, language=request.language or 'English')
+    # Fetch personalization context
+    try:
+        # Get user's recent mood
+        user_mood = None
+        wellness_data = db.get_wellness_stats(user['id'])
+        if wellness_data:
+            user_mood = wellness_data.get('current_mood')
+
+        # Get user's name
+        user_name = user.get('username') or user.get('email', '').split('@')[0]
+
+        # Get recent assessments
+        assessment_data = {}
+        assessments = db.get_user_assessments(user['id'], limit=3)
+        if assessments:
+            latest = assessments[0]  # Most recent
+            if isinstance(latest, dict):
+                responses = latest.get('responses')
+                if isinstance(responses, str):
+                    import json
+                    responses = json.loads(responses)
+                assessment_type = latest.get('assessment_type', 'dass42')
+                assessment_data[assessment_type] = {
+                    'score': latest.get('score', 0),
+                    'responses': responses
+                }
+                # Parse scores if available in responses
+                if isinstance(responses, dict):
+                    assessment_data[assessment_type].update(responses)
+
+        # Get conversation history for this session
+        conversation_history = []
+        session_messages = db.get_session_messages(user['id'], session_id)
+        if session_messages:
+            for msg in session_messages[-8:]:  # Last 8 messages
+                conversation_history.append({
+                    'message': msg.get('message'),
+                    'response': msg.get('response')
+                })
+
+        # Get emotion history (from emotion tracking)
+        emotion_history = db.get_emotion_history(user['id'], limit=20)
+
+        # Generate personalized response
+        response, sources, emotion_data = chatbot.chat_with_personalization(
+            request.message,
+            language=request.language or 'English',
+            user_mood=user_mood,
+            assessment_data=assessment_data,
+            emotion_history=emotion_history,
+            conversation_history=conversation_history,
+            user_name=user_name
+        )
+
+    except Exception as e:
+        print(f"Error during personalization: {str(e)}")
+        # Fallback to standard response if personalization fails
+        response, sources, emotion_data = chatbot.chat(request.message, language=request.language or 'English')
 
     # Save to database with session_id
     chat_id = db.save_chat_message(user['id'], session_id, request.message, response)

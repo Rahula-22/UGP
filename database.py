@@ -598,3 +598,51 @@ class Database:
         entries = [dict(row) for row in cursor.fetchall()]
         conn.close()
         return entries
+
+    def get_wellness_stats(self, user_id: int) -> Dict:
+        """Get wellness stats for a user (mood, points, streaks, etc.)"""
+        try:
+            stats = self.get_or_create_wellness_stats(user_id)
+            return {
+                'current_mood': stats.get('current_mood'),
+                'wellness_points': stats.get('wellness_points', 0),
+                'streak': stats.get('streak', 0),
+                'longest_streak': stats.get('longest_streak', 0)
+            }
+        except Exception as e:
+            print(f"Error getting wellness stats: {e}")
+            return {}
+
+    def get_emotion_history(self, user_id: int, limit: int = 20) -> List[Dict]:
+        """Get mood journal entries (emotion history) for a user"""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT mood_score, emotions, triggers, notes, created_at
+                   FROM mood_journal
+                   WHERE user_id = ?
+                   ORDER BY created_at DESC
+                   LIMIT ?""",
+                (user_id, limit)
+            )
+            entries = cursor.fetchall()
+            conn.close()
+
+            result = []
+            for entry in entries:
+                emotion_list = entry[1].split(',') if entry[1] else []
+                result.append({
+                    'mood_score': entry[0],
+                    'emotion': {
+                        'primary_emotion': emotion_list[0] if emotion_list else 'neutral',
+                        'emotions': emotion_list
+                    },
+                    'triggers': entry[2],
+                    'notes': entry[3],
+                    'created_at': entry[4]
+                })
+            return result
+        except Exception as e:
+            print(f"Error getting emotion history: {e}")
+            return []

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { 
+import {
   Send, Brain, CheckCircle, AlertCircle,
   Loader2, X, Menu
 } from 'lucide-react';
@@ -10,6 +10,7 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Chat from './components/Chat';
 import Assessment from './components/Assessment';
+import RecommendedQuestions from './components/RecommendedQuestions';
 import { API_BASE } from './config/api';
 
 function App() {
@@ -75,8 +76,8 @@ function App() {
         message: userMessage
       });
 
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
+      setMessages(prev => [...prev, {
+        role: 'assistant',
         content: response.data.response
       }]);
     } catch (error) {
@@ -84,6 +85,10 @@ function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSelectRecommendedQuestion = (question) => {
+    setInput(question);
   };
 
   const handleLoginSuccess = (userData, token) => {
@@ -244,17 +249,17 @@ function App() {
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {messages.length === 0 && (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center max-w-md">
+              <div className="text-center max-w-2xl">
                 <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Brain className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   Welcome to Your AI Companion
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 mb-6">
                   I'm here to support you with mental health information based on professional documents.
                 </p>
-                <div className="text-sm text-gray-500 space-y-2">
+                <div className="text-sm text-gray-500 space-y-2 mb-6">
                   <p className="flex items-center justify-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
                     System is ready
@@ -268,7 +273,14 @@ function App() {
                     AI configured
                   </p>
                 </div>
-                <p className="text-sm text-gray-600 mt-4">Start by asking a question below!</p>
+
+                {/* Recommended Questions */}
+                <RecommendedQuestions
+                  userMood={null}
+                  userName={null}
+                  language="English"
+                  onSelectQuestion={handleSelectRecommendedQuestion}
+                />
               </div>
             </div>
           )}

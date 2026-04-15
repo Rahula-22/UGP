@@ -219,29 +219,29 @@ Respond entirely in {language}.
     def chat(self, user_message: str, language: str = 'English') -> Tuple[str, List[Document], Dict]:
         """
         Main chat function with emotion detection.
-        
+
         Args:
             user_message: User's question or message
-            
+
         Returns:
             Tuple of (response, relevant_documents, emotion_data)
         """
         # Detect emotion
         emotion_data = self.emotion_detector.detect_emotion(user_message)
-        
+
         # Store emotion in history
         self.emotion_history.append({
             'timestamp': datetime.now().isoformat(),
             'message': user_message,
             'emotion': emotion_data
         })
-        
+
         # Retrieve relevant context
         relevant_docs = self.retrieve_context(user_message)
-        
+
         # Format context
         context = self.format_context(relevant_docs)
-        
+
         # Generate emotion-aware response
         response = self.generate_emotion_aware_response(
             user_message,
@@ -249,14 +249,303 @@ Respond entirely in {language}.
             emotion_data,
             language
         )
-        
+
         # Update chat history
         self.chat_history.append((user_message, response))
         if len(self.chat_history) > config.MAX_HISTORY_LENGTH:
             self.chat_history.pop(0)
-        
+
         return response, relevant_docs, emotion_data
-    
+
+    def chat_with_personalization(
+        self,
+        user_message: str,
+        language: str = 'English',
+        user_mood: str = None,
+        assessment_data: Dict = None,
+        emotion_history: List[Dict] = None,
+        conversation_history: List[Dict] = None,
+        user_name: str = None
+    ) -> Tuple[str, List[Document], Dict]:
+        """
+        Enhanced chat with full personalization context.
+
+        Args:
+            user_message: User's current message
+            language: Response language
+            user_mood: Current mood ('anxiety', 'sad', 'stressed', 'happy', 'neutral')
+            assessment_data: Recent mental health assessment scores
+            emotion_history: User's recent emotion patterns
+            conversation_history: Previous messages in this session
+            user_name: User's name for personalization
+
+        Returns:
+            Tuple of (response, relevant_documents, emotion_data)
+        """
+        # Detect emotion for current message
+        emotion_data = self.emotion_detector.detect_emotion(user_message)
+
+        # Store emotion in history
+        self.emotion_history.append({
+            'timestamp': datetime.now().isoformat(),
+            'message': user_message,
+            'emotion': emotion_data
+        })
+
+        # Retrieve relevant context
+        relevant_docs = self.retrieve_context(user_message)
+
+        # Format context
+        context = self.format_context(relevant_docs)
+
+        # Generate personalized response with full context
+        response = self.generate_personalized_response(
+            user_message,
+            context,
+            emotion_data,
+            language,
+            user_mood,
+            assessment_data,
+            emotion_history,
+            conversation_history,
+            user_name
+        )
+
+        # Update chat history
+        self.chat_history.append((user_message, response))
+        if len(self.chat_history) > config.MAX_HISTORY_LENGTH:
+            self.chat_history.pop(0)
+
+        return response, relevant_docs, emotion_data
+
+    def generate_personalized_response(
+        self,
+        query: str,
+        context: str,
+        emotion: Dict,
+        language: str = "English",
+        user_mood: str = None,
+        assessment_data: Dict = None,
+        emotion_history: List[Dict] = None,
+        conversation_history: List[Dict] = None,
+        user_name: str = None
+    ) -> str:
+        """
+        Generate response with full personalization context.
+
+        Incorporates:
+        - User's current mood
+        - Recent assessment scores
+        - Emotion patterns over time
+        - Conversation history
+        - User preferences and name
+        """
+        if not self.groq_client:
+            return "⚠️ Groq API client is not initialized. Please check API configuration."
+
+        try:
+            # Extract emotion signals
+            primary_emotion = emotion.get("primary_emotion", "neutral")
+            intensity = emotion.get("intensity", "medium")
+
+            # Build personalization context
+            personalization_context = self._build_personalization_context(
+                user_name,
+                user_mood,
+                assessment_data,
+                emotion_history,
+                primary_emotion
+            )
+
+            # Build enhanced system prompt with personalization
+            system_prompt = f"""You are a warm, empathetic mental health support companion providing deeply personalized care.
+
+{personalization_context}
+
+Your role is to respond like a supportive counselor who:
+• Listens carefully and acknowledges the user's unique situation
+• Remembers their patterns and struggles
+• Validates their emotions with genuine understanding
+• Offers practical guidance tailored to what helps them
+• Adapts your approach based on their emotional patterns
+
+Conversation principles:
+• Respond naturally and conversationally
+• Be warm, respectful, and non-judgmental
+• Focus specifically on what the user just shared
+• Avoid generic advice — personalize based on their history
+• If they mention recurring struggles, acknowledge the pattern
+• Reference strategies that have worked for them before
+• Match their emotional intensity with appropriate care
+
+Response approach when someone is struggling:
+1. Validate their specific situation (not just generic empathy)
+2. Reference their patterns if relevant ("I know you've struggled with this before...")
+3. Suggest coping strategies tailored to their needs
+4. Connect to what has helped them previously
+5. Let them know their concerns matter and are manageable
+
+Safety approach:
+• Never diagnose mental health conditions
+• Never cite sources or documents
+• If they mention suicidal thoughts, self-harm: Respond with deep compassion. Ask about their pain. Affirm their worth. Suggest 988 (US crisis line) or text HELLO to 741741
+• If in immediate danger, they should contact emergency services
+
+Context usage:
+Use background reference material only as internal guidance. Never mention or cite sources.
+
+Language requirement:
+Respond entirely in {language}."""
+
+            # Construct messages with conversation history
+            messages = [{"role": "system", "content": system_prompt}]
+
+            # Add relevant conversation history (last 6-8 exchanges)
+            if conversation_history:
+                history_to_add = conversation_history[-8:]
+                for msg in history_to_add:
+                    user_msg = msg.get("message", msg.get("user_message", ""))
+                    asst_msg = msg.get("response", msg.get("assistant_message", ""))
+                    if user_msg:
+                        messages.append({"role": "user", "content": user_msg})
+                    if asst_msg:
+                        messages.append({"role": "assistant", "content": asst_msg})
+
+            # Prepare user message with context
+            if context and context != "No relevant information found in the knowledge base.":
+                user_prompt = f"""Background reference (internal guidance only):
+{context}
+
+User message:
+{query}"""
+            else:
+                user_prompt = query
+
+            messages.append({"role": "user", "content": user_prompt})
+
+            # Generate response with Groq
+            chat_completion = self.groq_client.chat.completions.create(
+                messages=messages,
+                model=config.GROQ_MODEL,
+                temperature=0.7,
+                max_tokens=1200
+            )
+
+            return chat_completion.choices[0].message.content
+
+        except Exception as e:
+            return f"❌ Error generating personalized response: {str(e)}"
+
+    def _build_personalization_context(
+        self,
+        user_name: str,
+        user_mood: str,
+        assessment_data: Dict,
+        emotion_history: List[Dict],
+        current_emotion: str
+    ) -> str:
+        """
+        Build a personalization context string from user data.
+        """
+        context_parts = []
+
+        # User name
+        if user_name:
+            context_parts.append(f"The user's name is {user_name}.")
+
+        # Current mood context
+        if user_mood:
+            mood_contexts = {
+                "anxiety": "The user is currently feeling anxious. They may benefit from grounding techniques, reassurance, and practical coping strategies.",
+                "sad": "The user is feeling sad. Respond with compassion, validate their feelings, and help them explore what might lift their mood.",
+                "stressed": "The user is experiencing stress. Help them prioritize, break down challenges, and find practical solutions.",
+                "happy": "The user is in a positive mood. Reinforce positive thinking patterns and help them maintain momentum.",
+                "neutral": "The user is feeling neutral. Explore what brought them here and what would be most helpful."
+            }
+            context_parts.append(mood_contexts.get(user_mood, ""))
+
+        # Assessment insights
+        if assessment_data:
+            insights = self._format_assessment_insights(assessment_data)
+            if insights:
+                context_parts.append(insights)
+
+        # Emotion patterns
+        if emotion_history and len(emotion_history) > 0:
+            patterns = self._analyze_emotion_patterns(emotion_history)
+            if patterns:
+                context_parts.append(patterns)
+
+        return "\n".join(filter(None, context_parts))
+
+    def _format_assessment_insights(self, assessment_data: Dict) -> str:
+        """
+        Format mental health assessment data into helpful insights.
+        """
+        insights = []
+
+        if isinstance(assessment_data, dict):
+            if "dass42" in assessment_data:
+                dass = assessment_data["dass42"]
+                if isinstance(dass, dict):
+                    if dass.get("depression_score", 0) > 20:
+                        insights.append("• The user has indicated moderate to high depression symptoms. Prioritize hope, validation, and gentle action steps.")
+                    if dass.get("anxiety_score", 0) > 20:
+                        insights.append("• The user has indicated moderate to high anxiety. Offer grounding techniques and reassurance.")
+                    if dass.get("stress_score", 0) > 20:
+                        insights.append("• The user is under significant stress. Help with prioritization and stress-management techniques.")
+
+            if "phq9" in assessment_data:
+                phq9 = assessment_data["phq9"]
+                if isinstance(phq9, dict):
+                    score = phq9.get("total_score", 0)
+                    if score > 15:
+                        insights.append("• Recent depression screening suggests significant concern. Approach with extra care and validate their struggles.")
+                    elif score > 10:
+                        insights.append("• The user has been showing depressive symptoms. Check in about their wellbeing.")
+
+            if "gad7" in assessment_data:
+                gad7 = assessment_data["gad7"]
+                if isinstance(gad7, dict):
+                    score = gad7.get("total_score", 0)
+                    if score > 15:
+                        insights.append("• The user has elevated anxiety levels. Prioritize calming strategies and reassurance.")
+                    elif score > 10:
+                        insights.append("• Recent anxiety assessments suggest ongoing concern. Be especially validate and grounding.")
+
+        return "Assessment context:\n" + "\n".join(insights) if insights else ""
+
+    def _analyze_emotion_patterns(self, emotion_history: List[Dict]) -> str:
+        """
+        Analyze emotion patterns from recent history.
+        """
+        if not emotion_history or len(emotion_history) < 3:
+            return ""
+
+        # Get recent emotions
+        recent = emotion_history[-10:]
+        emotions = [entry.get("emotion", {}).get("primary_emotion", "neutral") for entry in recent if isinstance(entry, dict)]
+
+        if not emotions:
+            return ""
+
+        # Count emotions
+        from collections import Counter
+        emotion_counts = Counter(emotions)
+        most_common = emotion_counts.most_common(2)
+
+        patterns = []
+        if most_common:
+            primary, count = most_common[0]
+            pattern_msg = f"The user has been experiencing {primary} frequently"
+            if len(most_common) > 1:
+                secondary, _ = most_common[1]
+                pattern_msg += f" and {secondary} occasionally"
+            pattern_msg += ". Acknowledge this pattern and offer targeted support."
+            patterns.append(pattern_msg)
+
+        return "Recent emotion patterns:\n" + "\n".join(patterns) if patterns else ""
+
     def generate_emotion_aware_response(self, query: str, context: str, emotion: Dict, language: str = "English") -> str:
         """
         Generate response tailored to detected emotion.

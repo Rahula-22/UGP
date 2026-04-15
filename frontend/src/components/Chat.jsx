@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Send, Brain, Loader2, ArrowLeft, Mic, MicOff, History, Menu, X, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import RecommendedQuestions from './RecommendedQuestions';
 import { API_BASE } from '../config/api';
 
 const LANGUAGES = [
@@ -30,6 +31,8 @@ function Chat({ sessionToken, onBack }) {
   const [voiceSupported] = useState(
     () => !!(window.SpeechRecognition || window.webkitSpeechRecognition)
   );
+  const [userMood, setUserMood] = useState(null);
+  const [userName, setUserName] = useState(null);
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
 
@@ -74,6 +77,25 @@ function Chat({ sessionToken, onBack }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Load user personalization data
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        setUserName(user.username || null);
+      }
+
+      const savedWellnessData = localStorage.getItem('userWellnessData');
+      if (savedWellnessData) {
+        const wellnessData = JSON.parse(savedWellnessData);
+        setUserMood(wellnessData.currentMood || null);
+      }
+    } catch (error) {
+      console.error('Error loading personalization data:', error);
+    }
+  }, []);
 
   useEffect(() => {
     const loadChatSessions = async () => {
@@ -232,6 +254,10 @@ function Chat({ sessionToken, onBack }) {
     }
   };
 
+  const handleSelectRecommendedQuestion = (question) => {
+    setInput(question);
+  };
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Sidebar */}
@@ -336,12 +362,20 @@ function Chat({ sessionToken, onBack }) {
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {messages.length === 0 && (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center max-w-md">
+              <div className="text-center max-w-2xl">
                 <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Brain className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">How can I help you today?</h3>
-                <p className="text-gray-600">Ask me anything about mental health and well-being.</p>
+                <p className="text-gray-600 mb-6">Ask me anything about mental health and well-being.</p>
+
+                {/* Recommended Questions */}
+                <RecommendedQuestions
+                  userMood={userMood}
+                  userName={userName}
+                  language={selectedLang.name}
+                  onSelectQuestion={handleSelectRecommendedQuestion}
+                />
               </div>
             </div>
           )}

@@ -22,7 +22,7 @@ python process_documents.py
 
 ### 1.3 Start Backend API
 ```bash
-python api.py
+uvicorn app.api:app --host 0.0.0.0 --port 8000
 ```
 
 Backend will run at: **http://localhost:8000**
@@ -67,7 +67,7 @@ Frontend will run at: **http://localhost:3000**
 Terminal 1 (Backend):
 ```bash
 cd c:\Users\HP\OneDrive\Desktop\Ugp
-uvicorn api:app --reload
+uvicorn app.api:app --host 0.0.0.0 --port 8000
 ```
 
 Terminal 2 (Frontend):
@@ -82,7 +82,7 @@ npm run dev
 ```batch
 @echo off
 echo Starting Mental Health AI Companion...
-start cmd /k "cd /d %~dp0 && python api.py"
+start cmd /k "cd /d %~dp0 && uvicorn app.api:app --host 0.0.0.0 --port 8000"
 timeout /t 3
 start cmd /k "cd /d %~dp0frontend && npm run dev"
 echo Servers starting...
@@ -109,7 +109,7 @@ This creates optimized files in `frontend/dist/`
 ## Troubleshooting
 
 ### Backend Issues
-- **Port 8000 in use**: Change port in `api.py` line: `uvicorn.run(app, host="0.0.0.0", port=8000)`
+- **Port 8000 in use**: Run backend on another port, e.g. `uvicorn app.api:app --host 0.0.0.0 --port 8001`
 - **Import errors**: Run `pip install -r requirements.txt` again
 
 ### Frontend Issues

@@ -37,7 +37,7 @@ def main():
     print("=" * 50)
     print(f"Total chunks processed: {len(chunks)}")
     print(f"Vectorstore saved to: {config.VECTORSTORE_DIRECTORY}")
-    print("\nYou can now run 'streamlit run app.py' to start chatting!")
+    print("\nYou can now run 'uvicorn app.api:app --reload --reload-dir app' and start the frontend with 'npm run dev' in the frontend folder.")
 
 if __name__ == "__main__":
     main()

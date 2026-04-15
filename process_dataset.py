@@ -117,7 +117,7 @@ def main():
     print("=" * 60)
     print(f"Conversation chunks added : {len(documents)}")
     print(f"Vectorstore location      : {config.VECTORSTORE_DIRECTORY}")
-    print("\nRestart the API server (uvicorn api:app) for changes to take effect.")
+    print("\nRestart the API server (uvicorn app.api:app) for changes to take effect.")
 
 
 if __name__ == "__main__":

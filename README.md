@@ -38,7 +38,7 @@ Mental health challenges are increasingly common, and many people struggle to ac
 
 This README has been aligned to the current codebase (April 2026):
 
-- Backend entrypoint: `api.py` (FastAPI app)
+- Backend entrypoint: `app/api.py` (FastAPI app)
 - Chat/RAG logic: `chatbot.py`
 - Runtime config loader: `config_runtime.py` (reads from `config.py` or environment)
 - Frontend app: `frontend/src/App.jsx` with Vite dev server on port `3000`
@@ -59,7 +59,9 @@ This README has been aligned to the current codebase (April 2026):
 ## 📂 Project Structure
 
 ```
-├── api.py                          # Main FastAPI application
+├── app/
+│   ├── __init__.py                 # Python package marker for backend app module
+│   └── api.py                      # Main FastAPI application
 ├── chatbot.py                      # RAG retrieval & AI response logic
 ├── database.py                     # SQLite schema & persistence
 ├── document_processor.py           # PDF extraction & text chunking
@@ -132,7 +134,7 @@ cd ..
 
 **Terminal 1 - Backend API:**
 ```bash
-uvicorn api:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.api:app --host 0.0.0.0 --port 8000
 ```
 
 **Terminal 2 - Frontend:**

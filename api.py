@@ -802,7 +802,14 @@ async def assessment_chat(request: AssessmentChatRequest):
             language=request.language or 'English',
             dass42_subscales=request.dass42_subscales,
         )
-        db.save_chat_message(user['id'], request.message, response)
+        try:
+            session_id = db.create_chat_session(
+                user['id'],
+                title=f"{request.assessment_type.upper()} Assessment Support"
+            )
+            db.save_chat_message(user['id'], session_id, request.message, response)
+        except Exception as save_error:
+            print(f"Warning: failed to persist assessment chat message: {save_error}")
         return {"response": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -947,6 +954,7 @@ async def get_gratitude_entries(session_token: str, limit: int = 50):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
+if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

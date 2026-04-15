@@ -10,6 +10,7 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Chat from './components/Chat';
 import Assessment from './components/Assessment';
+import Counsellors from './components/Counsellors';
 import RecommendedQuestions from './components/RecommendedQuestions';
 import { API_BASE } from './config/api';
 
@@ -144,6 +145,10 @@ function App() {
 
   if (currentView === 'assessment') {
     return <Assessment sessionToken={sessionToken} onBack={() => handleNavigate('dashboard')} />;
+  }
+
+  if (currentView === 'counsellors') {
+    return <Counsellors user={user} onBack={() => handleNavigate('dashboard')} />;
   }
 
   return (

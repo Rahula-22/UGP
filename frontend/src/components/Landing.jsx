@@ -14,6 +14,7 @@ import {
   Phone,
 } from 'lucide-react';
 import heroImage from '../assets/image.png';
+import { COUNSELLORS } from '../config/counsellors';
 
 function FeatureCard({ icon: Icon, title, description }) {
   return (
@@ -54,6 +55,8 @@ function TestimonialCard({ quote, name, meta }) {
 }
 
 export default function Landing({ onSignIn, onSignUp }) {
+  const featuredCounsellors = COUNSELLORS.slice(0, 3);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-violet-50">
       {/* Decorative background */}
@@ -108,7 +111,7 @@ export default function Landing({ onSignIn, onSignUp }) {
 
             <p className="mt-4 max-w-xl text-base leading-relaxed text-gray-600">
               Emotional support, therapy tools, and self care - in one modern platform. Chat with an AI companion,
-              track your mood, meditate with guided sessions, book a professional therapist, and connect with
+              track your mood, meditate with guided sessions, browse counsellors, and connect with
               supportive groups.
             </p>
 
@@ -184,14 +187,71 @@ export default function Landing({ onSignIn, onSignUp }) {
             />
             <FeatureCard
               icon={CalendarCheck2}
-              title="Professional Therapist Booking"
-              description="Find a licensed professional and book sessions that fit your schedule and comfort level."
+              title="Counsellor Booking"
+              description="Browse counsellor profiles and reserve a session when you need more personal support."
             />
             <FeatureCard
               icon={Users}
               title="Community Support Groups"
               description="Join moderated groups to feel less alone and learn from people on a similar journey."
             />
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-6 pb-16">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-extrabold tracking-tight text-gray-900">
+                Meet the demo counsellors
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">
+                For now, this section uses playful character placeholders so users can explore the booking flow.
+              </p>
+            </div>
+            <button
+              onClick={onSignUp}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 text-sm font-semibold text-white shadow hover:from-emerald-600 hover:to-teal-700"
+            >
+              Explore counsellors <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-3">
+            {featuredCounsellors.map((counsellor) => (
+              <div
+                key={counsellor.id}
+                className="rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur"
+              >
+                <div className="overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-slate-100 via-white to-slate-200 ring-1 ring-gray-200/70">
+                  <img
+                    src={counsellor.image}
+                    alt={counsellor.imageAlt}
+                    className="h-48 w-full object-cover"
+                  />
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="mt-4 text-base font-extrabold tracking-tight text-gray-900">{counsellor.name}</div>
+                    <div className="mt-1 text-sm text-gray-500">{counsellor.civilianName}</div>
+                  </div>
+                  <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200/70">
+                    Demo
+                  </div>
+                </div>
+                <div className="mt-4 text-sm font-semibold text-gray-800">{counsellor.tagline}</div>
+                <div className="mt-3 text-sm leading-relaxed text-gray-600">{counsellor.style}</div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {counsellor.focus.slice(0, 2).map((item) => (
+                    <span
+                      key={`${counsellor.id}-${item}`}
+                      className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -217,7 +277,7 @@ export default function Landing({ onSignIn, onSignUp }) {
               {[
                 { n: 1, title: 'Sign Up', desc: 'Create your private space in under a minute.' },
                 { n: 2, title: 'Take Mental Health Assessment', desc: 'Get a quick snapshot and clear language insights.' },
-                { n: 3, title: 'Get Personalized Support', desc: 'Chat, meditate, or connect with groups based on needs.' },
+                { n: 3, title: 'Choose Your Support', desc: 'Talk to your companion or book a counsellor session when needed.' },
                 { n: 4, title: 'Track Progress', desc: 'Log mood and revisit patterns to see what helps.' },
               ].map((s) => (
                 <div key={s.n} className="rounded-3xl border border-gray-200/70 bg-white/70 p-6 shadow-sm">

@@ -1,0 +1,31 @@
+<svg width="640" height="640" viewBox="0 0 640 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="640" rx="48" fill="#08111F"/>
+  <circle cx="520" cy="118" r="118" fill="#1D4ED8" fill-opacity="0.34"/>
+  <circle cx="128" cy="560" r="160" fill="#EF4444" fill-opacity="0.28"/>
+  <path d="M0 402C85 353 174 344 267 375C361 406 443 409 514 384C560 368 602 345 640 316V640H0V402Z" fill="url(#paint0_linear_1_2)"/>
+  <circle cx="320" cy="270" r="124" fill="#D62839"/>
+  <path d="M223 242C238 214 268 196 303 196H337C372 196 402 214 417 242C412 233 400 226 388 226H252C240 226 228 233 223 242Z" fill="#1F2937" fill-opacity="0.35"/>
+  <path d="M258 231C220 244 194 281 194 324V337C194 372 222 400 257 400H383C418 400 446 372 446 337V324C446 281 420 244 382 231L320 210L258 231Z" fill="#D62839"/>
+  <path d="M190 324C190 278 216 236 258 216L320 188L382 216C424 236 450 278 450 324V336C450 374 420 404 382 404H258C220 404 190 374 190 336V324Z" stroke="#0F172A" stroke-width="10"/>
+  <path d="M320 194V404" stroke="#0F172A" stroke-width="8"/>
+  <path d="M218 268H422" stroke="#0F172A" stroke-width="8"/>
+  <path d="M205 316H435" stroke="#0F172A" stroke-width="8"/>
+  <path d="M218 364H422" stroke="#0F172A" stroke-width="8"/>
+  <path d="M240 248L320 320L400 248" stroke="#0F172A" stroke-width="8"/>
+  <path d="M236 392L320 320L404 392" stroke="#0F172A" stroke-width="8"/>
+  <path d="M236 276L320 320L404 276" stroke="#0F172A" stroke-width="8"/>
+  <path d="M256 412L320 320L384 412" stroke="#0F172A" stroke-width="8"/>
+  <path d="M238 265C250 246 271 234 294 234H305C292 252 269 266 245 266H238V265Z" fill="white"/>
+  <path d="M402 265C390 246 369 234 346 234H335C348 252 371 266 395 266H402V265Z" fill="white"/>
+  <path d="M238 265C250 246 271 234 294 234H305" stroke="#0F172A" stroke-width="8" stroke-linecap="round"/>
+  <path d="M402 265C390 246 369 234 346 234H335" stroke="#0F172A" stroke-width="8" stroke-linecap="round"/>
+  <path d="M240 414C250 371 280 333 320 333C360 333 390 371 400 414L420 490H220L240 414Z" fill="#1E3A8A"/>
+  <path d="M240 414C250 371 280 333 320 333C360 333 390 371 400 414L420 490H220L240 414Z" stroke="#0F172A" stroke-width="10"/>
+  <path d="M279 360L320 395L361 360" stroke="#93C5FD" stroke-width="10" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="paint0_linear_1_2" x1="320" y1="316" x2="320" y2="640" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A" stop-opacity="0"/>
+      <stop offset="1" stop-color="#020617"/>
+    </linearGradient>
+  </defs>
+</svg>

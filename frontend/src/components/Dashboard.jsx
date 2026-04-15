@@ -18,6 +18,7 @@ import {
   TrendingUp,
   CalendarDays,
   Gamepad2,
+  Users,
 } from "lucide-react";
 import MoodBuddy from "./MoodBuddy";
 import DailyMoodCheckIn from "./DailyMoodCheckIn";
@@ -27,6 +28,7 @@ import BadgesSection from "./BadgesSection";
 import GratitudeGarden from "./GratitudeGarden";
 import DailyPositiveMessage from "./DailyPositiveMessage";
 import WellnessGamesPage from "./WellnessGamesPage";
+import { COUNSELLORS } from "../config/counsellors";
 
 function Dashboard({ user, onNavigate, onLogout }) {
   const [activeNav, setActiveNav] = useState("dashboard");
@@ -77,7 +79,6 @@ function Dashboard({ user, onNavigate, onLogout }) {
       wellnessPoints,
       unlockedBadges,
       gratitudeEntries,
-      completedMilestones,
     };
     localStorage.setItem("userWellnessData", JSON.stringify(userData));
   };
@@ -187,6 +188,8 @@ function Dashboard({ user, onNavigate, onLogout }) {
     ],
     [todayLabel]
   );
+
+  const featuredCounsellors = useMemo(() => COUNSELLORS.slice(0, 3), []);
 
   const NavButton = ({ id, icon: Icon, label }) => {
     const active = activeNav === id;
@@ -320,6 +323,13 @@ function Dashboard({ user, onNavigate, onLogout }) {
                 >
                   Talk to your companion <ChevronRight className="h-4 w-4" />
                 </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigate("counsellors")}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:from-emerald-600 hover:to-teal-700"
+                >
+                  Book a counsellor session <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -447,6 +457,64 @@ function Dashboard({ user, onNavigate, onLogout }) {
                     Start Assessment <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
+              </div>
+            </div>
+
+            <div className="mt-8 rounded-3xl border border-gray-200/70 bg-white/80 p-6 shadow-sm backdrop-blur sm:p-8">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div className="text-base font-extrabold tracking-tight text-gray-900">Counsellors</div>
+                  <div className="mt-1 text-sm text-gray-600">
+                    Users can now connect with comic-inspired placeholder counsellors and book a session when they need extra support.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onNavigate("counsellors")}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 text-sm font-semibold text-white shadow hover:from-emerald-600 hover:to-teal-700"
+                >
+                  Browse counsellors <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                {featuredCounsellors.map((counsellor) => (
+                  <button
+                    key={counsellor.id}
+                    type="button"
+                    onClick={() => onNavigate("counsellors")}
+                    className="group rounded-3xl border border-gray-200/70 bg-gradient-to-br from-white to-emerald-50/50 p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow"
+                  >
+                    <div className="overflow-hidden rounded-[1.5rem] bg-white ring-1 ring-gray-200/70">
+                      <img
+                        src={counsellor.image}
+                        alt={counsellor.imageAlt}
+                        className="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                      />
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="mt-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow">
+                        <Users className="h-6 w-6" />
+                      </div>
+                      <div className="mt-4 rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200/70">
+                        Demo
+                      </div>
+                    </div>
+                    <div className="mt-4 text-base font-extrabold tracking-tight text-gray-900">{counsellor.name}</div>
+                    <div className="mt-1 text-sm text-gray-500">{counsellor.civilianName}</div>
+                    <div className="mt-3 text-sm leading-relaxed text-gray-600">{counsellor.tagline}</div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {counsellor.focus.slice(0, 2).map((focus) => (
+                        <span
+                          key={`${counsellor.id}-${focus}`}
+                          className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-gray-700 ring-1 ring-gray-200"
+                        >
+                          {focus}
+                        </span>
+                      ))}
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
 

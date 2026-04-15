@@ -337,15 +337,21 @@ class Database:
         conn.commit()
         conn.close()
     
-    def get_user_assessments(self, user_id: int) -> List[Dict]:
+    def get_user_assessments(self, user_id: int, limit: Optional[int] = None) -> List[Dict]:
         """Get user's assessment history"""
         conn = self.get_connection()
         cursor = conn.cursor()
-        
-        cursor.execute(
-            "SELECT * FROM assessments WHERE user_id = ? ORDER BY created_at DESC",
-            (user_id,)
-        )
+
+        if limit is None:
+            cursor.execute(
+                "SELECT * FROM assessments WHERE user_id = ? ORDER BY created_at DESC",
+                (user_id,)
+            )
+        else:
+            cursor.execute(
+                "SELECT * FROM assessments WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
+                (user_id, limit)
+            )
         
         assessments = [dict(row) for row in cursor.fetchall()]
         conn.close()
@@ -606,7 +612,7 @@ class Database:
             return {
                 'current_mood': stats.get('current_mood'),
                 'wellness_points': stats.get('wellness_points', 0),
-                'streak': stats.get('streak', 0),
+                'streak': stats.get('current_streak', 0),
                 'longest_streak': stats.get('longest_streak', 0)
             }
         except Exception as e:

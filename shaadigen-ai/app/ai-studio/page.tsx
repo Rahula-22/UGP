@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { Reveal } from "@/components/motion";
 import {
   Camera,
   Check,
@@ -139,40 +141,49 @@ export default function AIStudioPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
-      <section className="mt-8">
-        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-800">
+      <Reveal>
+      <section className="mt-10">
+        <span className="eyebrow inline-flex items-center gap-2 rounded-full border border-[#b8d4bb]/80 bg-white/60 px-4 py-1.5 text-[#4c7a52] shadow-sm backdrop-blur-xl">
           <Sparkles className="h-3.5 w-3.5" /> Module 03
         </span>
-        <h1 className="font-serif mt-3 text-3xl font-bold text-stone-900 sm:text-4xl">
-          🎨 AI Visual Studio
+        <h1 className="font-serif mt-4 text-4xl font-bold tracking-tight text-stone-900 sm:text-5xl">
+          🎨 AI Visual <span className="text-gold-sheen italic">Studio</span>
         </h1>
-        <p className="mt-2 max-w-2xl text-stone-500">
+        <p className="mt-3 max-w-2xl text-stone-500">
           Try on couture virtually under real event lighting, then generate a
           full destination pre-wedding photoshoot — no travel required.
         </p>
       </section>
+      </Reveal>
 
       {/* ── Virtual Try-On ─────────────────────────────── */}
-      <section className="mt-8 grid gap-6 lg:grid-cols-5">
-        <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm lg:col-span-2">
+      <section className="mt-10 grid gap-6 lg:grid-cols-5">
+        <div className="glass-card glass-card-hover rounded-3xl p-7 lg:col-span-2">
           <h2 className="flex items-center gap-2 text-lg font-bold text-stone-900">
             <Shirt className="h-5 w-5 text-rose-500" /> Virtual Try-On &
             Lighting Simulator
           </h2>
 
-          {/* Avatar preview */}
+          {/* Avatar preview — rotating mannequin */}
           <div
-            className={`relative mt-4 flex aspect-[3/4] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b transition-all duration-500 ${lighting.ambience}`}
+            className={`relative mt-4 flex aspect-[3/4] items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-b transition-all duration-700 ${lighting.ambience}`}
+            style={{ perspective: 900 }}
           >
-            {/* Outfit layer */}
-            <div
-              className={`flex h-52 w-40 flex-col items-center justify-center rounded-t-full bg-gradient-to-b shadow-2xl transition-all duration-500 sm:h-64 sm:w-48 ${outfit.swatch}`}
+            {/* Outfit layer on a slowly rotating pedestal */}
+            <motion.div
+              animate={{ rotateY: [0, 14, 0, -14, 0] }}
+              transition={{ repeat: Infinity, duration: 9, ease: "easeInOut" }}
+              className={`flex h-52 w-40 flex-col items-center justify-center rounded-t-full bg-gradient-to-b shadow-2xl transition-colors duration-700 sm:h-64 sm:w-48 ${outfit.swatch}`}
+              style={{ transformStyle: "preserve-3d" }}
             >
               <span className="text-6xl drop-shadow-lg">{outfit.emoji}</span>
               <span className="mt-3 max-w-[85%] text-center text-xs font-bold text-white drop-shadow">
                 {outfit.name}
               </span>
-            </div>
+            </motion.div>
+            {/* pedestal */}
+            <div className="absolute bottom-6 h-4 w-44 rounded-[100%] bg-[#8a6a2f]/25 blur-md" />
+            <div className="absolute bottom-7 h-2.5 w-36 rounded-[100%] bg-gradient-to-r from-[#c9a24b] via-[#efd9a7] to-[#c9a24b] opacity-70" />
             {/* Lighting overlay */}
             <div
               className={`pointer-events-none absolute inset-0 transition-all duration-700 ${lighting.overlay}`}
@@ -188,7 +199,7 @@ export default function AIStudioPage() {
         </div>
 
         <div className="flex flex-col gap-5 lg:col-span-3">
-          <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div className="glass-card glass-card-hover rounded-3xl p-7">
             <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500">
               Select Outfit Style
             </h3>
@@ -204,8 +215,8 @@ export default function AIStudioPage() {
                   className={cn(
                     "rounded-xl border-2 p-3 text-left transition-all hover:-translate-y-0.5",
                     outfit.id === o.id
-                      ? "border-rose-500 bg-rose-50 shadow-md"
-                      : "border-stone-200 bg-white hover:border-rose-300",
+                      ? "border-[#c9a24b] bg-[#fdf6e7] shadow-[0_12px_30px_-12px_rgba(201,162,75,0.55)]"
+                      : "border-white/90 bg-white/60 backdrop-blur hover:border-[#e0c98f]",
                   )}
                 >
                   <div
@@ -219,7 +230,7 @@ export default function AIStudioPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div className="glass-card glass-card-hover rounded-3xl p-7">
             <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-stone-500">
               <Sun className="h-4 w-4" /> Lighting Mode
             </h3>
@@ -232,8 +243,8 @@ export default function AIStudioPage() {
                   className={cn(
                     "flex items-center gap-2 rounded-xl border-2 px-3 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5",
                     lighting.id === l.id
-                      ? "border-amber-500 bg-amber-50 text-stone-900 shadow-md"
-                      : "border-stone-200 bg-white text-stone-600 hover:border-amber-300",
+                      ? "border-[#c9a24b] bg-[#fdf6e7] text-stone-900 shadow-[0_12px_30px_-12px_rgba(201,162,75,0.55)]"
+                      : "border-white/90 bg-white/60 text-stone-600 backdrop-blur hover:border-[#e0c98f]",
                   )}
                 >
                   <span className="text-xl">{l.icon}</span> {l.name}
@@ -253,7 +264,7 @@ export default function AIStudioPage() {
       </section>
 
       {/* ── Pre-Wedding Shoot Generator ────────────────── */}
-      <section className="mt-10 rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-amber-50 p-6 shadow-sm sm:p-8">
+      <section className="glass-card glass-reflection mt-12 rounded-3xl p-7 sm:p-9">
         <h2 className="flex items-center gap-2 text-lg font-bold text-stone-900">
           <Camera className="h-5 w-5 text-emerald-600" /> AI Pre-Wedding Shoot
           Generator
@@ -282,7 +293,7 @@ export default function AIStudioPage() {
               type="button"
               onClick={generateShoot}
               disabled={generating}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-3 text-sm font-bold text-white shadow transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn-gold mt-4 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60"
             >
               {generating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -306,8 +317,8 @@ export default function AIStudioPage() {
                   className={cn(
                     "rounded-xl border-2 p-3 text-left transition-all hover:-translate-y-0.5",
                     theme.id === t.id
-                      ? "border-emerald-500 bg-white shadow-md"
-                      : "border-stone-200 bg-white/60 hover:border-emerald-300",
+                      ? "border-[#c9a24b] bg-[#fdf6e7] shadow-[0_12px_30px_-12px_rgba(201,162,75,0.55)]"
+                      : "border-white/90 bg-white/60 backdrop-blur hover:border-[#e0c98f]",
                   )}
                 >
                   <div
@@ -326,7 +337,7 @@ export default function AIStudioPage() {
 
         {/* Loader */}
         {generating && (
-          <div className="animate-fade-up mt-6 rounded-2xl border border-emerald-200 bg-white p-6">
+          <div className="glass-card animate-fade-up mt-6 rounded-3xl p-7 !bg-white/85">
             <div className="flex items-center gap-3">
               <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
               <p className="text-sm font-bold text-stone-800">
@@ -376,7 +387,7 @@ export default function AIStudioPage() {
               <button
                 type="button"
                 onClick={() => toast("4K album exported to your gallery!", "success")}
-                className="flex items-center gap-1.5 rounded-full border border-stone-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-stone-700 transition-all hover:border-emerald-400 hover:text-emerald-700"
+                className="btn-ghost flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold"
               >
                 <Download className="h-3.5 w-3.5" /> Export 4K Album
               </button>
@@ -385,7 +396,7 @@ export default function AIStudioPage() {
               {theme.palette.map((grad, i) => (
                 <figure
                   key={grad + i}
-                  className="animate-fade-up group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+                  className="glass-card glass-card-hover animate-fade-up group overflow-hidden rounded-3xl transition-transform duration-500 hover:-translate-y-1.5 hover:rotate-1"
                   style={{ animationDelay: `${i * 120}ms` }}
                 >
                   <div

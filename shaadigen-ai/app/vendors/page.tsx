@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { Reveal, Tilt } from "@/components/motion";
 import {
   BadgeCheck,
   Bot,
@@ -81,21 +83,24 @@ export default function VendorsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
-      <section className="mt-8">
-        <span className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-800">
-          <Sparkles className="h-3.5 w-3.5" /> Module 01
-        </span>
-        <h1 className="font-serif mt-3 text-3xl font-bold text-stone-900 sm:text-4xl">
-          🤝 Budget Vendor Matchmaker
-        </h1>
-        <p className="mt-2 max-w-2xl text-stone-500">
-          Move the slider — our AI instantly re-matches verified vendors that
-          fit your allocation, complete with pre-negotiated perks.
-        </p>
-      </section>
+      <Reveal>
+        <section className="mt-10">
+          <span className="eyebrow inline-flex items-center gap-2 rounded-full border border-[#dcc48f]/70 bg-white/60 px-4 py-1.5 text-[#8a6a2f] shadow-sm backdrop-blur-xl">
+            <Sparkles className="h-3.5 w-3.5" /> Module 01
+          </span>
+          <h1 className="font-serif mt-4 text-4xl font-bold tracking-tight text-stone-900 sm:text-5xl">
+            🤝 Budget Vendor <span className="text-gold-sheen italic">Matchmaker</span>
+          </h1>
+          <p className="mt-3 max-w-2xl text-stone-500">
+            Move the slider — our AI instantly re-matches verified vendors that
+            fit your allocation, complete with pre-negotiated perks.
+          </p>
+        </section>
+      </Reveal>
 
       {/* Budget slider */}
-      <section className="mt-8 rounded-2xl border border-amber-200 bg-white p-6 shadow-sm">
+      <Reveal delay={0.1}>
+      <section className="glass-card mt-10 rounded-3xl p-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <label
             htmlFor="budget-slider"
@@ -103,7 +108,7 @@ export default function VendorsPage() {
           >
             Total Wedding Budget
           </label>
-          <span className="rounded-full bg-stone-900 px-4 py-1.5 text-lg font-bold text-amber-300">
+          <span className="btn-gold rounded-full px-5 py-1.5 font-serif text-lg font-bold">
             {formatINR(budget)}
           </span>
         </div>
@@ -130,32 +135,35 @@ export default function VendorsPage() {
           {category === "Caterer" && " (≈300 guests, per-plate pricing)"}
         </p>
       </section>
+      </Reveal>
 
       {/* Category tabs */}
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="mt-7 flex flex-wrap gap-2">
         {CATEGORIES.map((c) => (
-          <button
+          <motion.button
             key={c}
             type="button"
             onClick={() => setCategory(c)}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.96 }}
             className={cn(
-              "rounded-full px-4 py-2 text-sm font-semibold transition-all",
+              "rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300",
               category === c
-                ? "bg-stone-900 text-amber-50 shadow-md"
-                : "border border-stone-300 bg-white text-stone-600 hover:border-amber-400 hover:text-stone-900",
+                ? "btn-gold shadow-md"
+                : "border border-white/80 bg-white/55 text-stone-600 shadow-sm backdrop-blur-xl hover:border-[#d9c491] hover:text-stone-900",
             )}
           >
             {CATEGORY_LABELS[c]}
-          </button>
+          </motion.button>
         ))}
       </div>
 
       {/* Vendor cards */}
-      <section className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="mt-7 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((v, i) => (
+          <Tilt key={v.id} className="h-full" max={5}>
           <article
-            key={v.id}
-            className="animate-fade-up group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+            className="glass-card glass-card-hover glass-reflection animate-fade-up group h-full overflow-hidden rounded-3xl"
             style={{ animationDelay: `${i * 60}ms` }}
           >
             <div
@@ -206,17 +214,18 @@ export default function VendorsPage() {
               <button
                 type="button"
                 onClick={() => startNegotiation(v)}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 px-4 py-2.5 text-sm font-bold text-white shadow transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                className="btn-gold mt-4 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold"
               >
                 <Bot className="h-4 w-4" /> Negotiate Quote via AI
               </button>
             </div>
           </article>
+          </Tilt>
         ))}
       </section>
 
       {filtered.length === 0 && (
-        <div className="mt-6 rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center">
+        <div className="glass-card mt-6 rounded-3xl border-dashed p-12 text-center">
           <p className="text-4xl">🪔</p>
           <p className="mt-3 font-semibold text-stone-700">
             No {CATEGORY_LABELS[category].replace(/^\S+\s/, "")} match this
@@ -232,11 +241,14 @@ export default function VendorsPage() {
       {/* Negotiation modal */}
       {negotiating && (
         <div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-stone-950/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-[#2b2015]/40 p-4 backdrop-blur-md"
           onClick={() => setNegotiating(null)}
         >
-          <div
-            className="animate-fade-up w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 24 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            className="glass-card w-full max-w-md rounded-3xl p-7 !bg-white/90"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between">
@@ -284,13 +296,13 @@ export default function VendorsPage() {
                 <button
                   type="button"
                   onClick={() => setNegotiating(null)}
-                  className="w-full rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-bold text-amber-50 transition-all hover:bg-stone-700"
+                  className="btn-gold w-full rounded-2xl px-4 py-3 text-sm font-bold"
                 >
                   Add to My Shortlist
                 </button>
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

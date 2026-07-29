@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import { Navbar } from "@/components/navbar";
 import { BudgetProvider } from "@/components/budget-context";
 import { ToastProvider } from "@/components/toast";
+import { GuestChatbot } from "@/components/guest-chatbot";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,6 +34,7 @@ export default function RootLayout({
           <ToastProvider>
             <Navbar />
             <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+            <GuestChatbot />
             <footer className="border-t border-amber-200/60 bg-[#fdf3e3] py-8">
               <div className="mx-auto max-w-7xl px-4 text-center text-sm text-stone-500 sm:px-6">
                 💍 ShaadiGen AI — Reimagining the Indian Wedding Industry with

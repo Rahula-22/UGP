@@ -5,6 +5,7 @@ import { BudgetProvider } from "@/components/budget-context";
 import { ToastProvider } from "@/components/toast";
 import { LenisProvider } from "@/components/lenis-provider";
 import { LuxCursor } from "@/components/cursor";
+import { GuestChatbot } from "@/components/guest-chatbot";
 import "./globals.css";
 
 const inter = Inter({
@@ -63,6 +64,7 @@ export default function RootLayout({
             <LenisProvider>
               <Navbar />
               <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+              <GuestChatbot />
               <footer className="mt-4 border-t border-[#e9dcc2]/70 bg-white/40 py-10 backdrop-blur-md">
                 <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
                   <p className="font-serif text-lg text-[#6b5326]">

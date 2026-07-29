@@ -8,6 +8,7 @@ import {
   Clock,
   Languages,
   MapPin,
+  MessageCircle,
   PartyPopper,
   Play,
   Shirt,
@@ -100,6 +101,10 @@ export default function GuestHubPage() {
         <p className="mx-auto mt-3 max-w-lg text-sm text-stone-600">
           20–22 November 2026 · New Delhi, India. Three days of colour, music
           and rituals — this portal explains everything, in your language.
+        </p>
+        <p className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300 bg-white/80 px-4 py-2 text-xs font-semibold text-amber-800">
+          <MessageCircle className="h-3.5 w-3.5" /> Any doubts? Tap the
+          Concierge chat in the corner — it answers instantly, 24×7.
         </p>
         <button
           type="button"

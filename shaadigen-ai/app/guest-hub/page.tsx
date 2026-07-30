@@ -8,6 +8,7 @@ import {
   Clock,
   Languages,
   MapPin,
+  MessageCircle,
   PartyPopper,
   Play,
   Shirt,
@@ -15,9 +16,11 @@ import {
   Users,
   Volume2,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { EVENTS, RITUAL_EXPLAINERS, type ExplainerLanguage } from "@/lib/mock-data";
 import { useToast } from "@/components/toast";
 import { cn } from "@/lib/utils";
+import { Petals, Reveal } from "@/components/motion";
 
 const LANGUAGES: ExplainerLanguage[] = ["English", "हिन्दी", "Español", "Français"];
 
@@ -78,17 +81,27 @@ export default function GuestHubPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-16 sm:px-6">
-      <section className="mt-8 text-center">
-        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-800">
+      <Reveal>
+      <section className="mt-10 text-center">
+        <span className="eyebrow inline-flex items-center gap-2 rounded-full border border-[#dcc48f]/70 bg-white/60 px-4 py-1.5 text-[#8a6a2f] shadow-sm backdrop-blur-xl">
           <Sparkles className="h-3.5 w-3.5" /> Module 05 · Guest Portal
         </span>
-        <h1 className="font-serif mt-3 text-3xl font-bold text-stone-900 sm:text-4xl">
-          💒 Join My Wedding
+        <h1 className="font-serif mt-4 text-4xl font-bold tracking-tight text-stone-900 sm:text-5xl">
+          💒 Join My <span className="text-gold-sheen italic">Wedding</span>
         </h1>
       </section>
+      </Reveal>
 
-      {/* Welcome card */}
-      <section className="mt-8 overflow-hidden rounded-3xl border border-amber-300 bg-gradient-to-br from-amber-50 via-rose-50 to-emerald-50 p-8 text-center shadow-sm">
+      {/* Welcome card — floating invitation */}
+      <motion.section
+        initial={{ opacity: 0, rotateX: -14, y: 46, scale: 0.96 }}
+        whileInView={{ opacity: 1, rotateX: 0, y: 0, scale: 1 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+        style={{ transformPerspective: 1100 }}
+        className="glass-card glass-reflection relative mt-10 overflow-hidden rounded-3xl p-9 text-center"
+      >
+        <Petals count={8} />
         <p className="text-5xl">🙏</p>
         <h2 className="font-serif mt-4 text-2xl font-bold text-stone-900 sm:text-3xl">
           Namaste! You&apos;re invited to
@@ -101,14 +114,18 @@ export default function GuestHubPage() {
           20–22 November 2026 · New Delhi, India. Three days of colour, music
           and rituals — this portal explains everything, in your language.
         </p>
+        <p className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full border border-[#dcc48f]/70 bg-white/70 px-4 py-2 text-xs font-semibold text-[#8a6a2f] backdrop-blur">
+          <MessageCircle className="h-3.5 w-3.5" /> Any doubts? Tap the
+          Concierge chat in the corner — it answers instantly, 24×7.
+        </p>
         <button
           type="button"
           onClick={playGreeting}
-          className="mt-5 inline-flex items-center gap-2 rounded-full bg-stone-900 px-5 py-2.5 text-sm font-bold text-amber-50 shadow transition-all hover:-translate-y-0.5 hover:bg-stone-700"
+          className="btn-gold mt-5 inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold"
         >
           {greetingPlaying ? (
             <>
-              <Volume2 className="h-4 w-4 animate-pulse text-amber-300" />
+              <Volume2 className="h-4 w-4 animate-pulse text-[#7a5c1e]" />
               Playing greeting…
             </>
           ) : (
@@ -128,14 +145,14 @@ export default function GuestHubPage() {
             ))}
           </div>
         )}
-      </section>
+      </motion.section>
 
       {/* Language selector */}
       <section className="mt-10 flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-serif text-xl font-bold text-stone-900 sm:text-2xl">
           📅 Event Schedule & Ritual Guide
         </h2>
-        <label className="flex items-center gap-2 rounded-full border border-stone-300 bg-white px-3 py-2 text-sm shadow-sm">
+        <label className="flex items-center gap-2 rounded-full border border-white/80 bg-white/60 px-4 py-2.5 text-sm shadow-sm backdrop-blur-xl transition-all duration-300 hover:border-[#d9c491]">
           <Languages className="h-4 w-4 text-emerald-600" />
           <span className="text-xs font-semibold text-stone-500">
             Explainer language:
@@ -162,7 +179,7 @@ export default function GuestHubPage() {
           return (
             <article
               key={ev.id}
-              className={`animate-fade-up rounded-2xl border bg-gradient-to-r p-5 shadow-sm transition-all hover:shadow-md sm:p-6 ${style.accent}`}
+              className={`glass-card glass-card-hover animate-fade-up rounded-3xl bg-gradient-to-r p-6 sm:p-7 ${style.accent}`}
               style={{ animationDelay: `${i * 70}ms` }}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -188,8 +205,8 @@ export default function GuestHubPage() {
                   className={cn(
                     "flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition-all",
                     open
-                      ? "bg-stone-900 text-amber-50 shadow"
-                      : "border border-stone-400/50 bg-white/70 text-stone-700 hover:bg-white",
+                      ? "btn-gold shadow"
+                      : "border border-white/80 bg-white/65 text-stone-700 backdrop-blur hover:bg-white",
                   )}
                   aria-expanded={open}
                 >
@@ -226,12 +243,12 @@ export default function GuestHubPage() {
       </section>
 
       {/* RSVP */}
-      <section className="mt-10 rounded-3xl border border-emerald-200 bg-white p-6 shadow-sm sm:p-8">
+      <section className="glass-card glass-reflection mt-12 rounded-3xl p-7 sm:p-9">
         <h2 className="flex items-center gap-2 font-serif text-xl font-bold text-stone-900 sm:text-2xl">
           <PartyPopper className="h-6 w-6 text-rose-500" /> RSVP
         </h2>
         {submitted ? (
-          <div className="animate-fade-up mt-6 rounded-2xl border border-emerald-300 bg-emerald-50 p-8 text-center">
+          <div className="animate-fade-up mt-6 rounded-3xl border border-emerald-200 bg-emerald-50/80 p-9 text-center backdrop-blur">
             <p className="text-5xl">🎊</p>
             <h3 className="mt-3 text-lg font-bold text-emerald-900">
               Shukriya! Your RSVP is in.
@@ -244,7 +261,7 @@ export default function GuestHubPage() {
             <button
               type="button"
               onClick={() => setSubmitted(false)}
-              className="mt-4 rounded-full border border-emerald-400 px-4 py-2 text-xs font-bold text-emerald-800 transition-all hover:bg-emerald-100"
+              className="btn-ghost mt-4 rounded-full px-5 py-2.5 text-xs font-bold"
             >
               Edit my RSVP
             </button>
@@ -271,7 +288,7 @@ export default function GuestHubPage() {
                       "flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5",
                       attending === opt.key
                         ? `${opt.ring} shadow-md`
-                        : "border-stone-200 bg-white text-stone-600 hover:border-stone-400",
+                        : "border-white/90 bg-white/60 text-stone-600 backdrop-blur hover:border-[#e0c98f]",
                     )}
                   >
                     {opt.label}
@@ -290,7 +307,7 @@ export default function GuestHubPage() {
                   id="dietary"
                   value={dietary}
                   onChange={(e) => setDietary(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200"
+                  className="mt-1.5 w-full rounded-2xl border border-white/85 bg-white/65 px-4 py-3 text-sm shadow-sm backdrop-blur outline-none transition-all duration-300 focus:border-[#d9c491] focus:bg-white/90"
                 >
                   {DIETARY_OPTIONS.map((d) => (
                     <option key={d} value={d}>
@@ -307,14 +324,14 @@ export default function GuestHubPage() {
                   <button
                     type="button"
                     onClick={() => setGuestCount((c) => Math.max(1, c - 1))}
-                    className="h-10 w-10 rounded-xl border border-stone-300 text-lg font-bold text-stone-700 transition-all hover:border-emerald-400 hover:bg-emerald-50"
+                    className="h-11 w-11 rounded-2xl border border-white/85 bg-white/60 text-lg font-bold text-stone-700 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-[#d9c491] hover:bg-white active:scale-95"
                     aria-label="Decrease guest count"
                   >
                     −
                   </button>
                   <span
                     id="guest-count"
-                    className="flex h-10 min-w-16 items-center justify-center rounded-xl bg-stone-100 px-4 text-sm font-bold text-stone-900"
+                    className="flex h-11 min-w-16 items-center justify-center rounded-2xl border border-[#e9dcc2] bg-gradient-to-r from-[#faf3e2] to-[#f5e7cd] px-4 text-sm font-bold text-stone-900"
                   >
                     <Users className="mr-1.5 h-4 w-4 text-stone-500" />
                     {guestCount}
@@ -322,7 +339,7 @@ export default function GuestHubPage() {
                   <button
                     type="button"
                     onClick={() => setGuestCount((c) => Math.min(10, c + 1))}
-                    className="h-10 w-10 rounded-xl border border-stone-300 text-lg font-bold text-stone-700 transition-all hover:border-emerald-400 hover:bg-emerald-50"
+                    className="h-11 w-11 rounded-2xl border border-white/85 bg-white/60 text-lg font-bold text-stone-700 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-[#d9c491] hover:bg-white active:scale-95"
                     aria-label="Increase guest count"
                   >
                     +
@@ -333,7 +350,7 @@ export default function GuestHubPage() {
 
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-amber-500 px-4 py-3 text-sm font-bold text-white shadow transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              className="btn-gold flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-bold"
             >
               <PartyPopper className="h-4 w-4" /> Submit RSVP
             </button>

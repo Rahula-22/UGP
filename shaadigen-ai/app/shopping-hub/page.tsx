@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Reveal, Tilt } from "@/components/motion";
 import {
   MapPin,
   Navigation,
@@ -58,30 +59,33 @@ export default function ShoppingHubPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
-      <section className="mt-8">
-        <span className="inline-flex items-center gap-2 rounded-full bg-rose-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-rose-800">
+      <Reveal>
+      <section className="mt-10">
+        <span className="eyebrow inline-flex items-center gap-2 rounded-full border border-[#e3b7a4]/70 bg-white/60 px-4 py-1.5 text-[#a4653f] shadow-sm backdrop-blur-xl">
           <Sparkles className="h-3.5 w-3.5" /> Module 02
         </span>
-        <h1 className="font-serif mt-3 text-3xl font-bold text-stone-900 sm:text-4xl">
-          🛍️ Local Shopping Discovery
+        <h1 className="font-serif mt-4 text-4xl font-bold tracking-tight text-stone-900 sm:text-5xl">
+          🛍️ Local Shopping <span className="text-gold-sheen italic">Discovery</span>
         </h1>
-        <p className="mt-2 max-w-2xl text-stone-500">
+        <p className="mt-3 max-w-2xl text-stone-500">
           AI-curated hyperlocal shopping trails with verified addresses, honest
           price buckets and on-ground store escorts.
         </p>
       </section>
+      </Reveal>
 
       {/* Featured guide banner */}
-      <section className="mt-8 overflow-hidden rounded-3xl border border-rose-200 bg-gradient-to-r from-rose-50 via-amber-50 to-emerald-50 p-6 sm:p-8">
+      <Reveal delay={0.1}>
+      <section className="glass-card glass-reflection mt-10 overflow-hidden rounded-3xl p-7 sm:p-9">
         <div className="flex flex-wrap items-center gap-3">
-          <Newspaper className="h-6 w-6 text-rose-600" />
-          <span className="rounded-full bg-rose-600 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
+          <Newspaper className="h-6 w-6 text-[#b0714b]" />
+          <span className="btn-gold rounded-full px-4 py-1 text-xs font-bold uppercase tracking-wider">
             Featured Guide
           </span>
         </div>
-        <h2 className="font-serif mt-3 text-2xl font-bold text-stone-900 sm:text-3xl">
+        <h2 className="font-serif mt-4 text-2xl font-bold text-stone-900 sm:text-3xl">
           Top 10 Chandni Chowk Lehenga Shops
-          <span className="text-rose-600"> (2026 Discovery Guide)</span>
+          <span className="text-gold-sheen italic"> (2026 Discovery Guide)</span>
         </h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-stone-600">
           Old Delhi&apos;s legendary bridal bazaar, decoded by AI — from
@@ -105,17 +109,19 @@ export default function ShoppingHubPage() {
           </span>
         </div>
       </section>
+      </Reveal>
 
       {/* Search + filters */}
-      <section className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <Reveal delay={0.15}>
+      <section className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a8823d]" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search shops, specialties (e.g. Zardozi, Organza)…"
-            className="w-full rounded-full border border-stone-300 bg-white py-2.5 pl-10 pr-4 text-sm text-stone-800 shadow-sm outline-none transition-all placeholder:text-stone-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-200"
+            className="w-full rounded-full border border-white/80 bg-white/60 py-3 pl-11 pr-4 text-sm text-stone-800 shadow-sm backdrop-blur-xl outline-none transition-all duration-300 placeholder:text-stone-400 focus:border-[#d9c491] focus:bg-white/85 focus:shadow-[0_10px_30px_-10px_rgba(201,162,75,0.4)]"
           />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -125,10 +131,10 @@ export default function ShoppingHubPage() {
               type="button"
               onClick={() => setBucket(b.key)}
               className={cn(
-                "rounded-full px-3.5 py-2 text-xs font-semibold transition-all",
+                "rounded-full px-4 py-2.5 text-xs font-semibold transition-all duration-300 hover:-translate-y-0.5",
                 bucket === b.key
-                  ? "bg-stone-900 text-amber-50 shadow"
-                  : "border border-stone-300 bg-white text-stone-600 hover:border-rose-400",
+                  ? "btn-gold shadow"
+                  : "border border-white/80 bg-white/55 text-stone-600 shadow-sm backdrop-blur-xl hover:border-[#d9c491]",
               )}
             >
               {b.label}
@@ -136,15 +142,16 @@ export default function ShoppingHubPage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
       {/* Shop cards */}
-      <section className="mt-6 grid gap-5 md:grid-cols-2">
+      <section className="mt-7 grid gap-6 md:grid-cols-2">
         {filtered.map((s, i) => {
           const booked = bookedIds.includes(s.id);
           return (
+            <Tilt key={s.id} max={4}>
             <article
-              key={s.id}
-              className="animate-fade-up flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl sm:flex-row"
+              className="glass-card glass-card-hover glass-reflection animate-fade-up flex h-full flex-col overflow-hidden rounded-3xl sm:flex-row"
               style={{ animationDelay: `${i * 60}ms` }}
             >
               <div
@@ -185,10 +192,10 @@ export default function ShoppingHubPage() {
                   disabled={booked}
                   onClick={() => bookEscort(s.id, s.shopName)}
                   className={cn(
-                    "mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all",
+                    "mt-4 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition-all",
                     booked
-                      ? "cursor-default bg-emerald-100 text-emerald-800"
-                      : "bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow hover:-translate-y-0.5 hover:shadow-lg",
+                      ? "cursor-default border border-emerald-200 bg-emerald-50/80 text-emerald-800"
+                      : "btn-gold",
                   )}
                 >
                   <ShieldCheck className="h-4 w-4" />
@@ -196,12 +203,13 @@ export default function ShoppingHubPage() {
                 </button>
               </div>
             </article>
+            </Tilt>
           );
         })}
       </section>
 
       {filtered.length === 0 && (
-        <div className="mt-6 rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center">
+        <div className="glass-card mt-6 rounded-3xl border-dashed p-12 text-center">
           <p className="text-4xl">🔎</p>
           <p className="mt-3 font-semibold text-stone-700">
             No shops match your search.

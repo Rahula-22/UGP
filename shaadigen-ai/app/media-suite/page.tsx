@@ -16,6 +16,7 @@ import {
 import type { AIInviteCard, CustomSong } from "@/types/wedding";
 import { useToast } from "@/components/toast";
 import { cn } from "@/lib/utils";
+import { Reveal } from "@/components/motion";
 
 const GENRES = [
   { id: "arijit", name: "Arijit-style Acoustic", emoji: "🎸" },
@@ -128,22 +129,24 @@ export default function MediaSuitePage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
-      <section className="mt-8">
-        <span className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-800">
+      <Reveal>
+      <section className="mt-10">
+        <span className="eyebrow inline-flex items-center gap-2 rounded-full border border-[#dcc48f]/70 bg-white/60 px-4 py-1.5 text-[#8a6a2f] shadow-sm backdrop-blur-xl">
           <Sparkles className="h-3.5 w-3.5" /> Module 04
         </span>
-        <h1 className="font-serif mt-3 text-3xl font-bold text-stone-900 sm:text-4xl">
-          🎵 AI Media Suite
+        <h1 className="font-serif mt-4 text-4xl font-bold tracking-tight text-stone-900 sm:text-5xl">
+          🎵 AI Media <span className="text-gold-sheen italic">Suite</span>
         </h1>
-        <p className="mt-2 max-w-2xl text-stone-500">
+        <p className="mt-3 max-w-2xl text-stone-500">
           Compose a custom love song from your story and design a living
           invitation card — shareable in one tap.
         </p>
       </section>
+      </Reveal>
 
       {/* ── Love Song Generator ── */}
-      <section className="mt-8 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+      <section className="mt-10 grid gap-6 lg:grid-cols-2">
+        <div className="glass-card glass-card-hover rounded-3xl p-7">
           <h2 className="flex items-center gap-2 text-lg font-bold text-stone-900">
             <Mic2 className="h-5 w-5 text-rose-500" /> AI Love Song Generator
           </h2>
@@ -158,7 +161,7 @@ export default function MediaSuitePage() {
                 value={songNames}
                 onChange={(e) => setSongNames(e.target.value)}
                 placeholder="e.g. Aarav & Meera"
-                className="mt-1.5 w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm outline-none transition-all focus:border-rose-400 focus:ring-2 focus:ring-rose-200"
+                className="mt-1.5 w-full rounded-2xl border border-white/85 bg-white/65 px-4 py-3 text-sm shadow-sm backdrop-blur outline-none transition-all duration-300 focus:border-[#d9c491] focus:bg-white/90 focus:shadow-[0_10px_28px_-12px_rgba(201,162,75,0.45)]"
               />
             </div>
             <div>
@@ -171,7 +174,7 @@ export default function MediaSuitePage() {
                 onChange={(e) => setStory(e.target.value)}
                 rows={3}
                 placeholder="We met over chai at a Delhi book fair, argued about Ghalib, and never stopped talking…"
-                className="mt-1.5 w-full resize-none rounded-xl border border-stone-300 px-4 py-2.5 text-sm outline-none transition-all focus:border-rose-400 focus:ring-2 focus:ring-rose-200"
+                className="mt-1.5 w-full resize-none rounded-2xl border border-white/85 bg-white/65 px-4 py-3 text-sm shadow-sm backdrop-blur outline-none transition-all duration-300 focus:border-[#d9c491] focus:bg-white/90 focus:shadow-[0_10px_28px_-12px_rgba(201,162,75,0.45)]"
               />
             </div>
             <div>
@@ -187,8 +190,8 @@ export default function MediaSuitePage() {
                     className={cn(
                       "rounded-full px-3.5 py-2 text-xs font-semibold transition-all",
                       genre.id === g.id
-                        ? "bg-rose-600 text-white shadow"
-                        : "border border-stone-300 bg-white text-stone-600 hover:border-rose-400",
+                        ? "btn-gold shadow"
+                        : "border border-white/80 bg-white/55 text-stone-600 shadow-sm backdrop-blur hover:border-[#d9c491]",
                     )}
                   >
                     {g.emoji} {g.name}
@@ -200,7 +203,7 @@ export default function MediaSuitePage() {
               type="button"
               onClick={generateSong}
               disabled={songLoading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 px-4 py-3 text-sm font-bold text-white shadow transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn-gold flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60"
             >
               {songLoading ? (
                 <>
@@ -217,7 +220,7 @@ export default function MediaSuitePage() {
         </div>
 
         {/* Player */}
-        <div className="flex flex-col rounded-2xl border border-stone-200 bg-stone-950 p-6 shadow-sm">
+        <div className="flex flex-col overflow-hidden rounded-3xl border border-[#3a3128] bg-gradient-to-b from-[#221c16] to-[#171310] p-7 shadow-[0_30px_70px_-20px_rgba(43,32,21,0.7)]">
           {!song ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 py-12 text-center">
               <span className="text-5xl">🎧</span>
@@ -235,12 +238,27 @@ export default function MediaSuitePage() {
             </div>
           ) : (
             <div className="animate-fade-up flex flex-1 flex-col">
-              <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-amber-500 text-3xl shadow-lg">
-                  💞
+              <div className="flex items-center gap-5">
+                {/* Vinyl record */}
+                <div
+                  className={cn(
+                    "vinyl-spin relative h-20 w-20 shrink-0 rounded-full shadow-[0_10px_30px_-8px_rgba(0,0,0,0.8)]",
+                    !playing && "vinyl-paused",
+                  )}
+                  style={{
+                    background:
+                      "repeating-radial-gradient(circle at 50% 50%, #14100d 0px, #14100d 2px, #221c16 3px, #221c16 4px)",
+                  }}
+                  aria-hidden
+                >
+                  <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_120deg,transparent_0deg,rgba(255,235,200,0.14)_40deg,transparent_90deg,transparent_200deg,rgba(255,235,200,0.08)_240deg,transparent_290deg)]" />
+                  <div className="absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-gradient-to-br from-[#e0bd77] to-[#b98c33] text-base shadow-inner">
+                    💞
+                  </div>
+                  <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#171310]" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="truncate text-base font-bold text-white">
+                  <h3 className="truncate font-serif text-base font-bold text-[#f5e9d7]">
                     {song.title}
                   </h3>
                   <p className="text-xs text-stone-400">
@@ -255,7 +273,7 @@ export default function MediaSuitePage() {
                   <span
                     key={i}
                     className={cn(
-                      "w-2 rounded-full bg-gradient-to-t from-rose-500 to-amber-400 transition-all duration-300",
+                      "w-2 rounded-full bg-gradient-to-t from-[#c9a24b] to-[#f3d9ae] transition-all duration-300",
                       playing && "eq-bar",
                     )}
                     style={{
@@ -270,7 +288,7 @@ export default function MediaSuitePage() {
               <div className="mt-5">
                 <div className="h-1.5 overflow-hidden rounded-full bg-stone-800">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-rose-500 to-amber-400 transition-all"
+                    className="h-full rounded-full bg-gradient-to-r from-[#c9a24b] via-[#e0bd77] to-[#d8a48f] transition-all"
                     style={{ width: `${(progress / SONG_DURATION) * 100}%` }}
                   />
                 </div>
@@ -285,7 +303,7 @@ export default function MediaSuitePage() {
                 <button
                   type="button"
                   onClick={() => setPlaying((p) => !p)}
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-lg transition-all hover:scale-105"
+                  className="btn-gold flex h-14 w-14 items-center justify-center rounded-full transition-transform hover:scale-110 active:scale-95"
                   aria-label={playing ? "Pause" : "Play"}
                 >
                   {playing ? (
@@ -304,7 +322,7 @@ export default function MediaSuitePage() {
                     className={cn(
                       "text-xs leading-relaxed transition-all duration-300",
                       playing && i === activeLyric
-                        ? "scale-[1.02] font-bold text-amber-300"
+                        ? "scale-[1.02] font-bold text-[#e8cf9c]"
                         : "text-stone-400",
                     )}
                   >
@@ -318,7 +336,7 @@ export default function MediaSuitePage() {
       </section>
 
       {/* ── Invitation Card Studio ── */}
-      <section className="mt-10 rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-rose-50 p-6 shadow-sm sm:p-8">
+      <section className="glass-card glass-reflection mt-12 rounded-3xl p-7 sm:p-9">
         <h2 className="flex items-center gap-2 text-lg font-bold text-stone-900">
           <Heart className="h-5 w-5 text-rose-500" /> AI Invitation Card Studio
         </h2>
@@ -339,7 +357,7 @@ export default function MediaSuitePage() {
                 type="text"
                 value={inviteNames}
                 onChange={(e) => setInviteNames(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+                className="mt-1.5 w-full rounded-2xl border border-white/85 bg-white/65 px-4 py-3 text-sm shadow-sm backdrop-blur outline-none transition-all duration-300 focus:border-[#d9c491] focus:bg-white/90 focus:shadow-[0_10px_28px_-12px_rgba(201,162,75,0.45)]"
               />
             </div>
             <div>
@@ -351,7 +369,7 @@ export default function MediaSuitePage() {
                 type="text"
                 value={inviteDate}
                 onChange={(e) => setInviteDate(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+                className="mt-1.5 w-full rounded-2xl border border-white/85 bg-white/65 px-4 py-3 text-sm shadow-sm backdrop-blur outline-none transition-all duration-300 focus:border-[#d9c491] focus:bg-white/90 focus:shadow-[0_10px_28px_-12px_rgba(201,162,75,0.45)]"
               />
             </div>
             <div>
@@ -363,7 +381,7 @@ export default function MediaSuitePage() {
                 type="text"
                 value={inviteVenue}
                 onChange={(e) => setInviteVenue(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+                className="mt-1.5 w-full rounded-2xl border border-white/85 bg-white/65 px-4 py-3 text-sm shadow-sm backdrop-blur outline-none transition-all duration-300 focus:border-[#d9c491] focus:bg-white/90 focus:shadow-[0_10px_28px_-12px_rgba(201,162,75,0.45)]"
               />
             </div>
             <div>
@@ -379,8 +397,8 @@ export default function MediaSuitePage() {
                     className={cn(
                       "rounded-full px-3.5 py-2 text-xs font-semibold transition-all",
                       themeColor.id === t.id
-                        ? "bg-stone-900 text-amber-50 shadow"
-                        : "border border-stone-300 bg-white text-stone-600 hover:border-amber-400",
+                        ? "btn-gold shadow"
+                        : "border border-white/80 bg-white/55 text-stone-600 shadow-sm backdrop-blur hover:border-[#d9c491]",
                     )}
                   >
                     {t.name}
@@ -396,7 +414,7 @@ export default function MediaSuitePage() {
                   "success",
                 )
               }
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 text-sm font-bold text-white shadow transition-all hover:-translate-y-0.5 hover:brightness-105"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#1fb356] to-[#25D366] px-4 py-3.5 text-sm font-bold text-white shadow-[0_14px_34px_-12px_rgba(37,211,102,0.65)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_-12px_rgba(37,211,102,0.8)] active:scale-[0.98]"
             >
               <MessageCircle className="h-4 w-4" /> Export to WhatsApp
             </button>
@@ -405,7 +423,7 @@ export default function MediaSuitePage() {
           {/* Live preview */}
           <div className="flex items-center justify-center">
             <div
-              className={`w-full max-w-sm rounded-3xl border-2 bg-gradient-to-br p-8 text-center shadow-xl transition-all duration-500 ${themeColor.card}`}
+              className={`animate-float-slow w-full max-w-sm rounded-3xl border-2 bg-gradient-to-br p-8 text-center shadow-[0_36px_80px_-24px_rgba(160,120,45,0.45)] transition-all duration-500 ${themeColor.card}`}
             >
               <p className={`text-xs uppercase tracking-[0.3em] ${themeColor.accent}`}>
                 ॥ शुभ विवाह ॥

@@ -76,3 +76,9 @@ htmlcov/
 *.tmp
 *.bak
 *.swp
+
+# Un-ignore Next.js app lib folders (the lib/ rule above is for Python venvs)
+!shaadigen-ai/lib/
+!shaadigen-ai/lib/**
+!shaadigen-ai-classic/lib/
+!shaadigen-ai-classic/lib/**

@@ -7,10 +7,12 @@ import {
   Camera,
   Check,
   Download,
+  ImagePlus,
   Loader2,
   Shirt,
   Sparkles,
   Sun,
+  Upload,
   Wand2,
 } from "lucide-react";
 import type { PreWeddingShoot } from "@/types/wedding";
@@ -102,6 +104,11 @@ export default function AIStudioPage() {
   // Virtual try-on state
   const [outfit, setOutfit] = useState(OUTFITS[0]);
   const [lighting, setLighting] = useState(LIGHTING[0]);
+  const [personFile, setPersonFile] = useState<File | null>(null);
+  const [personPreview, setPersonPreview] = useState<string | null>(null);
+  const [tryOnResult, setTryOnResult] = useState<string | null>(null);
+  const [tryingOn, setTryingOn] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Pre-wedding shoot state
   const [coupleNames, setCoupleNames] = useState("Aarav & Meera");
@@ -110,6 +117,70 @@ export default function AIStudioPage() {
   const [stepIndex, setStepIndex] = useState(0);
   const [shoot, setShoot] = useState<PreWeddingShoot | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function onPersonSelected(file: File | null) {
+    if (personPreview) URL.revokeObjectURL(personPreview);
+    setTryOnResult(null);
+    if (!file) {
+      setPersonFile(null);
+      setPersonPreview(null);
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      toast("Please upload a JPEG, PNG, or WebP photo", "info");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast("Photo must be under 10MB", "info");
+      return;
+    }
+    setPersonFile(file);
+    setPersonPreview(URL.createObjectURL(file));
+  }
+
+  async function runTryOn() {
+    if (!personFile) {
+      toast("Upload your photo first to try on an outfit", "info");
+      return;
+    }
+    setTryingOn(true);
+    setTryOnResult(null);
+    try {
+      const form = new FormData();
+      form.append("person", personFile);
+      form.append("outfitId", outfit.id);
+      form.append("lightingId", lighting.id);
+      const res = await fetch("/api/try-on", { method: "POST", body: form });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        imageUrl?: string;
+        error?: string;
+        provider?: string;
+      };
+      if (!res.ok || !data.ok || !data.imageUrl) {
+        throw new Error(data.error || `Try-on failed (${res.status})`);
+      }
+      setTryOnResult(data.imageUrl);
+      toast(
+        `Try-on ready via ${data.provider ?? "AI"} — ${outfit.name}`,
+        "ai",
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Try-on request failed";
+      toast(message, "info");
+    } finally {
+      setTryingOn(false);
+    }
+  }
+
+  function downloadTryOn() {
+    if (!tryOnResult) return;
+    const a = document.createElement("a");
+    a.href = tryOnResult;
+    a.download = `shaadigen-tryon-${outfit.id}.png`;
+    a.click();
+  }
 
   function generateShoot() {
     if (!coupleNames.trim()) {
@@ -164,41 +235,119 @@ export default function AIStudioPage() {
             Lighting Simulator
           </h2>
 
-          {/* Avatar preview — rotating mannequin */}
+          {/* Avatar / try-on preview */}
           <div
             className={`relative mt-4 flex aspect-[3/4] items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-b transition-all duration-700 ${lighting.ambience}`}
             style={{ perspective: 900 }}
           >
-            {/* Outfit layer on a slowly rotating pedestal */}
-            <motion.div
-              animate={{ rotateY: [0, 14, 0, -14, 0] }}
-              transition={{ repeat: Infinity, duration: 9, ease: "easeInOut" }}
-              className={`flex h-52 w-40 flex-col items-center justify-center rounded-t-full bg-gradient-to-b shadow-2xl transition-colors duration-700 sm:h-64 sm:w-48 ${outfit.swatch}`}
-              style={{ transformStyle: "preserve-3d" }}
-            >
-              <span className="text-6xl drop-shadow-lg">{outfit.emoji}</span>
-              <span className="mt-3 max-w-[85%] text-center text-xs font-bold text-white drop-shadow">
-                {outfit.name}
-              </span>
-            </motion.div>
-            {/* pedestal */}
-            <div className="absolute bottom-6 h-4 w-44 rounded-[100%] bg-[#8a6a2f]/25 blur-md" />
-            <div className="absolute bottom-7 h-2.5 w-36 rounded-[100%] bg-gradient-to-r from-[#c9a24b] via-[#efd9a7] to-[#c9a24b] opacity-70" />
-            {/* Lighting overlay */}
+            {tryOnResult ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={tryOnResult}
+                alt={`Virtual try-on: ${outfit.name}`}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : personPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={personPreview}
+                alt="Uploaded person preview"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <motion.div
+                animate={{ rotateY: [0, 14, 0, -14, 0] }}
+                transition={{ repeat: Infinity, duration: 9, ease: "easeInOut" }}
+                className={`flex h-52 w-40 flex-col items-center justify-center rounded-t-full bg-gradient-to-b shadow-2xl transition-colors duration-700 sm:h-64 sm:w-48 ${outfit.swatch}`}
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                <span className="text-6xl drop-shadow-lg">{outfit.emoji}</span>
+                <span className="mt-3 max-w-[85%] text-center text-xs font-bold text-white drop-shadow">
+                  {outfit.name}
+                </span>
+              </motion.div>
+            )}
+            {!tryOnResult && !personPreview && (
+              <>
+                <div className="absolute bottom-6 h-4 w-44 rounded-[100%] bg-[#8a6a2f]/25 blur-md" />
+                <div className="absolute bottom-7 h-2.5 w-36 rounded-[100%] bg-gradient-to-r from-[#c9a24b] via-[#efd9a7] to-[#c9a24b] opacity-70" />
+              </>
+            )}
             <div
               className={`pointer-events-none absolute inset-0 transition-all duration-700 ${lighting.overlay}`}
             />
+            {tryingOn && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/45 backdrop-blur-sm">
+                <Loader2 className="h-8 w-8 animate-spin text-amber-200" />
+                <p className="text-sm font-bold text-white">Draping garment…</p>
+              </div>
+            )}
             <span className="absolute bottom-3 left-3 rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
               {lighting.icon} {lighting.name}
             </span>
             <span className="absolute right-3 top-3 rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-stone-700">
-              Live Preview
+              {tryOnResult ? "AI Try-On" : personPreview ? "Your Photo" : "Live Preview"}
             </span>
           </div>
           <p className="mt-3 text-xs text-stone-500">✨ {outfit.note}</p>
+          {tryOnResult && (
+            <button
+              type="button"
+              onClick={downloadTryOn}
+              className="btn-ghost mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold"
+            >
+              <Download className="h-3.5 w-3.5" /> Download try-on result
+            </button>
+          )}
         </div>
 
         <div className="flex flex-col gap-5 lg:col-span-3">
+          <div className="glass-card glass-card-hover rounded-3xl p-7">
+            <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-stone-500">
+              <ImagePlus className="h-4 w-4" /> Upload your photo
+            </h3>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/*"
+              className="hidden"
+              onChange={(e) => onPersonSelected(e.target.files?.[0] ?? null)}
+            />
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="btn-ghost inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold"
+              >
+                <Upload className="h-4 w-4" />
+                {personFile ? "Change photo" : "Choose photo"}
+              </button>
+              {personFile && (
+                <span className="truncate text-xs text-stone-500">
+                  {personFile.name}
+                </span>
+              )}
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-stone-500">
+              Full-body, front-facing photos work best. Max 10MB · JPEG / PNG /
+              WebP. Your image is sent to the configured try-on provider (AWS
+              Nova by default).
+            </p>
+            <button
+              type="button"
+              onClick={runTryOn}
+              disabled={tryingOn || !personFile}
+              className="btn-gold mt-4 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {tryingOn ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="h-4 w-4" />
+              )}
+              {tryingOn ? "Draping garment…" : `Try on ${outfit.name}`}
+            </button>
+          </div>
+
           <div className="glass-card glass-card-hover rounded-3xl p-7">
             <h3 className="text-sm font-bold uppercase tracking-wider text-stone-500">
               Select Outfit Style
@@ -210,7 +359,8 @@ export default function AIStudioPage() {
                   type="button"
                   onClick={() => {
                     setOutfit(o);
-                    toast(`Draped: ${o.name}`, "info");
+                    setTryOnResult(null);
+                    toast(`Selected: ${o.name}`, "info");
                   }}
                   className={cn(
                     "rounded-xl border-2 p-3 text-left transition-all hover:-translate-y-0.5",
